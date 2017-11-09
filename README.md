@@ -11,19 +11,19 @@ El otro grupo de 4 estudiantes, implementará el parser de las consultas en SQL 
 
 ## Definición de los datos
 Dados las 2 tablas de la base de datos A y B, cada una almacenada como un directorio con el nombre de la tabla y compuesta por varios archivos:
- - schema: Esquema de la tabla, es un archivo de una sola fila, donde 	cada columna contiene una cadena de caracteres de la forma nombre-tipo-index, donde nombre hace referencia al nombre de la columna, tipo hace referencia a su tipo de dato, que puede ser “number”, “boolean”, “string” e index puede tener 3 valores “btree” o “hash” o “”, indicando que la columna se debe indexar, usando el tipo de índice especificado. En caso de estar vacía, la columna no se debe indexar. Ejemplo:
+ - schema.txt: Esquema de la tabla, es un archivo de una sola fila, donde 	cada columna contiene una cadena de caracteres de la forma nombre-tipo-index, donde nombre hace referencia al nombre de la columna, tipo hace referencia a su tipo de dato, que puede ser “number”, “boolean”, “string” e index puede tener 3 valores “btree” o “hash” o “”, indicando que la columna se debe indexar, usando el tipo de índice especificado. En caso de estar vacía, la columna no se debe indexar. Ejemplo:
 
-| id(int)| b-string-hash | c-boolean  | x-number|
+| id-Integer| b-String-hash | c-Boolean  | x-Double|
 | -------|:-------------:| ----------:|--------:|
 
 
- - A_1.csv, A_2.csv, ... A_n.csv: Son archivos separados por comas, 	cada uno conteniendo un bloque de tuplas del tipo A. Cada tupla es una fila del archivo, y sus elementos satisfacen el orden y los tipos definidos en A.schema. Ejemplo:
+ - 1.csv, 2.csv, ... n.csv: Son archivos separados por comas, 	cada uno conteniendo un bloque de tuplas del tipo A. Cada tupla es una fila del archivo, y sus elementos satisfacen el orden y los tipos definidos en A.schema. Ejemplo:
  
 
-| id(int)| b-string-hash | c-boolean  | x-number|
-| -------|:-------------:| ----------:|--------:|
-| 1|abc|false|1.001|
-| 2|def|true|0.110|
+| id-Integer| b-String-hash | c-Boolean  | x-Double|
+| ----------|:-------------:| ----------:|--------:|
+| 1|"abc"|false|1.001|
+| 2|"def,1"|true|0.110|
 
 
 ## Parte 1  (Dividirse en 4 grupos de 2 estudiantes)
@@ -47,10 +47,10 @@ Usando las funciones de la parte 1, se debe implementar un motor de ejecución d
 El lenguaje estará limitado por las operaciones que se implementarán, es decir que será una versión reducida y simplista del lenguaje de consultas SQL implementado en MySQL o PostgreSQL. 
 La aplicación debe estar en capacidad de resolver las siguientes consulta:
 
- - A(id, b, c, x)
- - B(id, m, a, price)
+ - A(id, b, c, x) (Datos en el archivo de ejemplo)
+ - B(id, A, x, price) (Datos en el archivo de ejemplo)
  
 ```sql	
 	SELECT id, b FROM A WHERE c=true;
-	SELECT A.id, price FROM A, B WHERE c=true AND A.id =a;
+	SELECT A.id, price FROM A, B WHERE c=true AND A.id = B.A;
 ```
