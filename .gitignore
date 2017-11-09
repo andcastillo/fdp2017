@@ -1,1 +1,4 @@
 *.class
+
+# IntelliJ IDE project-config
+.idea
