@@ -1,1 +1,1 @@
-id-Integer,A-Integer,x-String,price-Double
+id-Integer,A-Integer-btree,x-String,price-Double

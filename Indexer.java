@@ -6,6 +6,7 @@ import java.util.Hashtable;
 public class Indexer {
 
     public static Hashtable<Object, Object> indexedHashtable = new Hashtable<Object, Object>();
+    public static BTree btree = new BTree();
     private static final String DEFAULT_SEPARATOR = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
 
     private String tableName; 		//Nombre de la tabla (Directorio) a escanear
@@ -26,7 +27,7 @@ public class Indexer {
                     fillHashTable(i);
                 }
                 if (schemaCol[2].equals("btree")) {
-
+                    fillBTree(i);
                 }
             }
         }
@@ -47,6 +48,7 @@ public class Indexer {
     }
 
     private void fillHashTable(int columnIndex) {
+        countBlocks = 1;
         inputStream = nextBlock();
         do {
             countRows = 0;
@@ -54,6 +56,22 @@ public class Indexer {
                 String row = inputStream.nextLine();
                 String[] tempRow = row.split(DEFAULT_SEPARATOR);
                 indexedHashtable.put(tempRow[columnIndex], row);
+                countRows++;
+            }
+            inputStream = nextBlock();
+        } while (inputStream != null);
+        this.close();
+    }
+
+    private void fillBTree (int columnIndex) {
+        countBlocks = 1;
+        inputStream = nextBlock();
+        do {
+            countRows = 0;
+            while (countRows < limit && inputStream.hasNext()) {
+                String row = inputStream.nextLine();
+                String[] tempRow = row.split(DEFAULT_SEPARATOR);
+                btree.put(tempRow[columnIndex], row);
                 countRows++;
             }
             inputStream = nextBlock();

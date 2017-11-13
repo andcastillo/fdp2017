@@ -19,52 +19,20 @@ public class IndexScan implements Iterator<List<Object>>{
 
 
 	public IndexScan(String tableName) {
-		open(tableName);
-	}
-	
-	public void open(String tableName){
-		this.tableName = tableName;
-		File file = new File("data/myDB/"+tableName+"/schema.txt"); //Se carga el esquema
-		try {
-			Scanner inputStream = new Scanner(file);
-			while (inputStream.hasNext()) {
-				dataSchema = inputStream.nextLine(); 
-			}
-			inputStream.close(); 
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();			
-		}
-        nextBlock();									//Se inicializa en el primer Bloque
 	}
 
 	//Se pregunta si hay siguiente en un bloque
 	//De lo contrario se carga el siguiente bloque y se inicia nuevamente el contador de registros
 	@Override
-	public boolean hasNext() {		
-
-		if(countRows > limit || !inputStream.hasNext()){
-			this.close();
-			inputStream = nextBlock();
-			if(inputStream == null){
-				return false;
-			}
-			countRows = 1;
-		}
-		return inputStream != null && inputStream.hasNext();
+	public boolean hasNext() {
 	}
 
 	@Override
 	public List<Object> next() {
-		if(hasNext()){
-			return parseRow(inputStream.nextLine(), dataSchema);	
-		}
-		return null;
 	}
 	
 	public void close(){
-		if ( inputStream != null ) {
-			inputStream.close();
-			}
+
 	}
 	
 	public List<Object> parseRow(String row , String schema){
@@ -90,19 +58,5 @@ public class IndexScan implements Iterator<List<Object>>{
 		countRows++;
 		return list;
 	}
-	
-	public Scanner nextBlock(){
-		File file = new File("data/myDB/"+tableName+"/"+countBlocks+".csv"); 
-		try {
-			inputStream = new Scanner(file);
-		} catch (FileNotFoundException e) {
-			//e.printStackTrace();
-			//No se encuentran mas bloques
-			return null;
-		}
-		countBlocks++;
-		return inputStream;
-    }
-
 }
 
