@@ -22,7 +22,6 @@ public class Projection implements IOperator {
     String type;
     Integer items ;
 
-
     @Override
     public void setOperatorName(String name) {
         this.type = name;
