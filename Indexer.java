@@ -4,20 +4,25 @@ import java.util.Scanner;
 import java.util.Hashtable;
 
 public class Indexer {
-
-    public static Hashtable<Object, Object> indexedHashtable = new Hashtable<Object, Object>();
-    public static BTree btree = new BTree();
     private static final String DEFAULT_SEPARATOR = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
-
-    private String tableName; 		//Nombre de la tabla (Directorio) a escanear
     private String dataSchema; 		//Contiene la informacion del esquema a escanea
     private int countBlocks = 1;	//Contador de bloques
     private int countRows = 1;		//Contador de registros dentro de cada bloque
     private int limit = 10;			//Limite del tama�o de cada bloque
     private Scanner inputStream;
 
-    public void indexTables (String tableName) {
-        readSchema(tableName);
+
+    public String tableName; 		//Nombre de la tabla (Directorio) a escanear
+    public Integer hashIndex;
+    public Hashtable<Object, Object> indexedHashtable = new Hashtable<Object, Object>();
+    public BTree btree = new BTree();
+
+    public Indexer (String tableName) {
+        this.tableName = tableName;
+    }
+
+    public void indexTable() {
+        readSchema();
         String[] tempSchema = dataSchema.split(DEFAULT_SEPARATOR);
         for (int i = 0; i < tempSchema.length; i++) {
             String[] schemaCol = tempSchema[i].split("-");
@@ -25,6 +30,8 @@ public class Indexer {
             if(schemaCol.length == 3){
                 if (schemaCol[2].equals("hash")) {
                     fillHashTable(i);
+                    // TODO: Check if more than one index per table is possible
+                    this.hashIndex = i;
                 }
                 if (schemaCol[2].equals("btree")) {
                     fillBTree(i);
@@ -33,9 +40,9 @@ public class Indexer {
         }
     }
 
-    private void readSchema(String tableName){
+    private void readSchema(){
         this.tableName = tableName;
-        File file = new File("data/myDB/"+tableName+"/schema.txt"); //Se carga el esquema
+        File file = new File("data/myDB/"+this.tableName+"/schema.txt"); //Se carga el esquema
         try {
             Scanner inputStream = new Scanner(file);
             while (inputStream.hasNext()) {
@@ -55,7 +62,7 @@ public class Indexer {
             while (countRows < limit && inputStream.hasNext()) {
                 String row = inputStream.nextLine();
                 String[] tempRow = row.split(DEFAULT_SEPARATOR);
-                indexedHashtable.put(tempRow[columnIndex], row);
+                indexedHashtable.put(tempRow[columnIndex], countBlocks - 1);
                 countRows++;
             }
             inputStream = nextBlock();
