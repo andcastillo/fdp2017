@@ -1,5 +1,7 @@
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
@@ -55,6 +57,7 @@ public class RemoveRepeated implements IOperator{
 				}
 			}
 			close(blockOutput);							//Se cierra el ultimo bloque
+			writeschema(tableName, TableNameOutput);
 			node.setTableNameOutput(TableNameOutput);
 			return TableNameOutput;
 		}
@@ -87,6 +90,26 @@ public class RemoveRepeated implements IOperator{
 			}
           }
 	}
+	
+
+	public void writeschema(String source, String destination){
+          
+		try {
+			File inFile = new File("data/myDB/"+source+"/schema.txt");
+			File outFile = new File("data/myDB/"+destination+"/schema.txt");
+
+			FileInputStream in = new FileInputStream(inFile);
+			FileOutputStream out = new FileOutputStream(outFile);
+			int c;
+			while( (c = in.read() ) != -1)
+				out.write(c);
+
+			in.close();
+			out.close();
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+    }
 	
 	
 
