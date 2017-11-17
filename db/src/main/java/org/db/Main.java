@@ -19,7 +19,7 @@ public class Main {
 		System.out.println("Como acceder a la base de datos:"+
 					DataBase.getInstance().getSchemaMaps().get("A"));//Obtenemos el esquema de A (Imprime Schema@4554617c puesto que es un objeto)
 		System.out.println("Como acceder a la base de datos:"+
-				DataBase.getInstance().getSchemaMaps().get("A").getTypes());//Obtenemos el esquema de A y luego los tipos de datos de A
+				DataBase.getInstance().getSchemaMaps().get("A").getAttribute()[0].getColumnName());//Obtenemos el esquema de A y luego los tipos de datos de A
 		
 		scanner = new Scanner (System.in);
 		
