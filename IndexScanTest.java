@@ -1,6 +1,6 @@
 import java.util.Enumeration;
 
-public class Main {
+public class IndexScanTest {
     public static void main(String[] args){
         // Hash table test
         Indexer indexer = new Indexer();
