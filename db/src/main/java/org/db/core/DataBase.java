@@ -75,26 +75,25 @@ public class DataBase {
 
 	public void auxLoadSchema(String dir, String table){		        
 		File dirTable = new File("data/"+dir+"/"+table+"/schema.txt"); 
-		Schema schema = new Schema(table);
 		Scanner inputStream;
+		Schema schema = null;
 		try {
 			inputStream = new Scanner(dirTable);
 
 			while (inputStream.hasNext()) {
 				//Las lineas vienen en formato: nombre-tipo-index, nombre-tipo-index, ...
 				String dataSchema = inputStream.nextLine(); 
-				String[] temp = dataSchema.split(DEFAULT_SEPARATOR);
-				for (String columns : temp) {
-					String[] column = columns.split("-");
+				String[] row = dataSchema.split(DEFAULT_SEPARATOR);
+				schema = new Schema(table, row.length);
+				for (int i = 0; i < row.length; i++) {
+					String[] column = row[i].split("-");
 					//column[0];//nombre columna		        			
 					//column[1];//tipo
 					//column[2];//index
-
 					//Adicionar el tipo a la lista en pareja ej: (Apellido,String)..
-					schema.getTypes().put(column[0], column[1]);	
 
+					String pathIndex = null;//Almacena el path del index creado
 					if(column.length > 2){//Si tiene indexacion
-						String pathIndex = "";//Almacena el path del index creado
 						switch ( column[2] ) {
 						case "btree":
 							//Implementar creacion de index btree
@@ -109,10 +108,12 @@ public class DataBase {
 						default:
 							System.out.println("Sin index" );
 							break;
-						}
-						//Adicionar el Index a la lista en pareja ej: (Apellido,IndexHash)..
-						schema.getIndexes().put(column[0], pathIndex);		        				
-					}	  
+						}        				
+					}
+
+					Attribute attrib = new Attribute(i, pathIndex, column[0]);
+					//Adicionar el Index a la lista en pareja ej: (Apellido,IndexHash)..
+					schema.addAttribute(attrib, i);		
 				}		                   
 			}
 			inputStream.close();
@@ -124,6 +125,5 @@ public class DataBase {
 		//Se adiciona el esquema cargado a la lista de esquemas.
 		schemaMaps.put(table, schema);
 	}
-
 
 }
