@@ -1,19 +1,16 @@
 package org.db.core;
 
-import java.util.HashMap;
-
 public class Schema {
 
 	private String path;
-	private HashMap<String, Object> indexes;
-	private HashMap<String, Object> types;
+	private int length;
+	private Attribute[] attribute;
 	
-	
-	public Schema(String path) {
+	public Schema(String path, int length) {
 		super();
 		this.path = path;
-		this.indexes = new HashMap<String, Object>();
-		this.types = new HashMap<String, Object>() ;
+		this.length = length;
+		this.setAttribute(new Attribute[length]);
 	}
 	public String getPath() {
 		return path;
@@ -21,21 +18,19 @@ public class Schema {
 	public void setPath(String path) {
 		this.path = path;
 	}
-	
-	public HashMap<String, Object> getIndexes() {
-		return indexes;
+	public int getLength() {
+		return length;
 	}
-	public void setIndexes(HashMap<String, Object> indexes) {
-		this.indexes = indexes;
+	public void setLength(int length) {
+		this.length = length;
 	}
-	
-	public HashMap<String, Object> getTypes() {
-		return types;
+	public Attribute[] getAttribute() {
+		return attribute;
 	}
-	public void setTypes(HashMap<String, Object> types) {
-		this.types = types;
+	public void setAttribute(Attribute[] attribute) {
+		this.attribute = attribute;
 	}
-	
-	
-	
+	public void addAttribute(Attribute attribute, int index) {
+		this.attribute[index] = attribute;
+	}
 }
