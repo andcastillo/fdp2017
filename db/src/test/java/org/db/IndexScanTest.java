@@ -1,6 +1,9 @@
-package db.src.test.java.org.db;
+package org.db;
 
 import java.util.Enumeration;
+
+import org.db.core.Indexer;
+import org.db.scan.IndexScan;
 
 public class IndexScanTest {
     public static void main(String[] args){
