@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
 /**
  *
  * @author WILMER
@@ -38,7 +39,7 @@ public class Projection implements IOperator {
             int limit = 10;
             int blockCount = 1;
             String tableName = node.getTableInput().get(0);
-            String TableNameOutput = tableName+"_Pr";
+            String TableNameOutput = tableName+"_PR";
             BufferedWriter blockOutput = createOutputFile(TableNameOutput,tableName, blockCount);
 
             List<String> attr = node.getParameters();
@@ -76,7 +77,7 @@ public class Projection implements IOperator {
                     for (Integer i: pos){
                         rowStr += ','+rowObject.get(i).toString();
                     }
-                    System.out.println("Pt:"+rowStr.substring(1));
+                    //System.out.println("Pt:"+rowStr.substring(1));
                     blockOutput.write(rowStr.substring(1));
                     blockOutput.newLine();
                 } catch (IOException e) {
@@ -90,14 +91,40 @@ public class Projection implements IOperator {
                 }
             }
             close(blockOutput);
-            node.setTableNameOutput(TableNameOutput);
-            return TableNameOutput;
+
+            // ELIMINACION DE REPETIDOS
+            List<String> tablasalida = new ArrayList<>();
+            tablasalida.add(TableNameOutput);
+
+            Node node1 = new Node();
+            node1.setTableInput(tablasalida);
+
+            node1.setType("RemoveRepeated");
+
+            IOperator op1 = new RemoveRepeated();
+            String table = op1.apply(node1);
+
+            // FIN ELIMINACION DE REPETIDOS
+
+            // ELIMINACION DE ARCHIVOS TEMP PROJECTION
+            File file = new File("data/myDB/"+TableNameOutput);
+            try {
+                delete(file);
+            } catch (IOException ex) {
+                Logger.getLogger(Projection.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            // FIN ELIMINACION DE ARCHIVOS TEMP PROJECTION
+
+            node.setTableNameOutput(table);
+            return table;
 
 
         }
         return null;
 
     }
+
+
 
     public static void writeschema(String dirStr, String tableName, String line) throws FileNotFoundException, IOException {
         File dir = new File("data/myDB/"+dirStr);
@@ -154,6 +181,25 @@ public class Projection implements IOperator {
         }
         return dataSchema;
 
+    }
+
+
+    private static void delete(File file) throws IOException {
+
+        for (File childFile : file.listFiles()) {
+
+            if (childFile.isDirectory()) {
+                delete(childFile);
+            } else {
+                if (!childFile.delete()) {
+                    throw new IOException();
+                }
+            }
+        }
+
+        if (!file.delete()) {
+            throw new IOException();
+        }
     }
 
 
