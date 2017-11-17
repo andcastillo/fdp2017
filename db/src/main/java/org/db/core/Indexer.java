@@ -9,45 +9,72 @@ import org.db.util.BTree;
 import java.util.Hashtable;
 
 public class Indexer {
+    public static Hashtable<String, Hashtable<String, Hashtable<String, Integer>>> hashIndexes = new Hashtable <String, Hashtable<String, Hashtable<String, Integer>>>();
+    public static Hashtable<String, Hashtable<String, BTree>> btreeIndexes = new Hashtable<String, Hashtable<String, BTree>>();
     private static final String DEFAULT_SEPARATOR = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
     private String dataSchema; 		//Contiene la informacion del esquema a escanea
     private int countBlocks = 1;	//Contador de bloques
-    private int countRows = 1;		//Contador de registros dentro de cada bloque
-    private int limit = 10;			//Limite del tama�o de cada bloque
+    private int blockSize = 10;			//Limite del tama�o de cada bloque
     private Scanner inputStream;
 
+    public Indexer () {}
 
-    public String tableName; 		//Nombre de la tabla (Directorio) a escanear
-    public Integer hashIndex;
-    public Hashtable<Object, Object> indexedHashtable = new Hashtable<Object, Object>();
-    public BTree btree = new BTree();
-
-    public Indexer (String tableName) {
-        this.tableName = tableName;
-    }
-
-    public void indexTable() {
-        readSchema();
+    public void indexTable(String tableName) {
+        readSchema(tableName);
+        btreeIndexes.put(tableName, new Hashtable<String, BTree>());
+        hashIndexes.put(tableName, new Hashtable<String, Hashtable<String, Integer>>());
         String[] tempSchema = dataSchema.split(DEFAULT_SEPARATOR);
         for (int i = 0; i < tempSchema.length; i++) {
             String[] schemaCol = tempSchema[i].split("-");
-            String data = tempSchema[i];
             if(schemaCol.length == 3){
-                if (schemaCol[2].equals("hash")) {
-                    fillHashTable(i);
-                    // TODO: Check if more than one index per table is possible
-                    this.hashIndex = i;
-                }
-                if (schemaCol[2].equals("btree")) {
-                    fillBTree(i);
-                }
+                addIndex(i, tableName, schemaCol[0], schemaCol[2]);
             }
         }
     }
 
-    private void readSchema(){
-        this.tableName = tableName;
-        File file = new File("data/myDB/"+this.tableName+"/schema.txt"); //Se carga el esquema
+    public Boolean columnIsIndexed (String tableName, String columnName) {
+        return columnIsHashIndexed(tableName, columnName) || columnIsBTreeIndexed(tableName, columnName);
+    }
+
+    public Boolean columnIsBTreeIndexed (String tableName, String columnName) {
+        return btreeIndexes.containsKey(tableName) && btreeIndexes.get(tableName).get(columnName) != null;
+    }
+
+    public Boolean columnIsHashIndexed (String tableName, String columnName) {
+        return hashIndexes.containsKey(tableName) && hashIndexes.get(tableName).containsKey(columnName);
+    }
+
+    private void addIndex(int columnIndex, String tableName, String columnName, String methodName) {
+        Hashtable<String, Integer> hashtable = new Hashtable<String, Integer>();
+        BTree btree = new BTree();
+        countBlocks = 1;
+        inputStream = nextBlock(tableName);
+        do {
+            int countRows = 0;
+            while (countRows < blockSize && inputStream.hasNext()) {
+                String row = inputStream.nextLine();
+                String[] tempRow = row.split(DEFAULT_SEPARATOR);
+                String key = tempRow[columnIndex];
+                Integer block = countBlocks - 1;
+                if (methodName.equals("hash")) {
+                    hashtable.put(key, block);
+                } else {
+                    btree.put(key, block);
+                }
+                countRows++;
+            }
+            inputStream = nextBlock(tableName);
+        } while (inputStream != null);
+        if (methodName.equals("hash")) {
+            hashIndexes.get(tableName).put(columnName, hashtable);
+        } else {
+            btreeIndexes.get(tableName).put(columnName, btree);
+        }
+        this.close();
+    }
+
+    private void readSchema(String tableName){
+        File file = new File("data/myDB/"+tableName+"/schema.txt"); //Se carga el esquema
         try {
             Scanner inputStream = new Scanner(file);
             while (inputStream.hasNext()) {
@@ -59,39 +86,7 @@ public class Indexer {
         }
     }
 
-    private void fillHashTable(int columnIndex) {
-        countBlocks = 1;
-        inputStream = nextBlock();
-        do {
-            countRows = 0;
-            while (countRows < limit && inputStream.hasNext()) {
-                String row = inputStream.nextLine();
-                String[] tempRow = row.split(DEFAULT_SEPARATOR);
-                indexedHashtable.put(tempRow[columnIndex], countBlocks - 1);
-                countRows++;
-            }
-            inputStream = nextBlock();
-        } while (inputStream != null);
-        this.close();
-    }
-
-    private void fillBTree (int columnIndex) {
-        countBlocks = 1;
-        inputStream = nextBlock();
-        do {
-            countRows = 0;
-            while (countRows < limit && inputStream.hasNext()) {
-                String row = inputStream.nextLine();
-                String[] tempRow = row.split(DEFAULT_SEPARATOR);
-                btree.put(tempRow[columnIndex], row);
-                countRows++;
-            }
-            inputStream = nextBlock();
-        } while (inputStream != null);
-        this.close();
-    }
-
-    private Scanner nextBlock(){
+    private Scanner nextBlock(String tableName){
         File file = new File("data/myDB/"+tableName+"/"+countBlocks+".csv");
         try {
             inputStream = new Scanner(file);
