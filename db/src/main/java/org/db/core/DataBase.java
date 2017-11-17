@@ -2,8 +2,15 @@ package org.db.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
+
+import org.db.operator.IOperator;
+import org.db.operator.Projection;
 
 
 public class DataBase {
@@ -40,12 +47,42 @@ public class DataBase {
 	}
 
 	private Object parserSQL(String sql){
-		//implementaci�n del parser
-		return null;
+		List<String> tables = new ArrayList<String>();
+		tables.add("A");
+		List<String> parameters = new ArrayList<String>();
+		parameters.add("id");
+		parameters.add("x");
+		Node node = new Node("Projection", tables, parameters, "A_ggg", null);
+		return node;
 	}
 
-	private String executeSQL(Object executionTree){
-		//implementar un motor de ejecuci�n de consultas
+	private String executeSQL(Object executionTree) {
+
+		if(executionTree instanceof Node) {
+			Node tmp = (Node) executionTree;
+
+			try {
+				Class<?> clazz = Class.forName("org.db.operator." + tmp.getOperationName());
+				Constructor<?> ctor = clazz.getConstructor();
+				Object object;
+				try {
+					object = ctor.newInstance(new Object[] { });
+					if(object instanceof IOperator) {
+						return ((IOperator)object).apply(tmp);
+					}
+				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					// TODO Auto-generated catch block. Never ever do this. I'm lazy
+					e.printStackTrace();
+					return null;
+				} 
+				
+			} catch (NoSuchMethodException | SecurityException | ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
+			
+		}
 		return null;
 	}
 

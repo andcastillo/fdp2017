@@ -4,16 +4,32 @@ import java.util.List;
 
 public class Node {
 
-	private String type;
+	private String operationName;
 	private List<String> tableInput;
 	private List<String> parameters;
 	private String tableNameOutput;
+	private String scanMethod = "seq";
 	
-	public String getType() {
-		return type;
+	public Node(String operationName, List<String> tableInput, List<String> parameters, 
+			String tableNameOutput, String scanMethod) {
+		this.operationName = operationName;
+		this.tableInput = tableInput;
+		this.parameters = parameters;
+		this.tableNameOutput = tableNameOutput;
+		if(scanMethod != null)
+			this.scanMethod = scanMethod;
 	}
-	public void setType(String type) {
-		this.type = type;
+	
+	
+	public Node() {
+		
+	}
+	
+	public String getOperationName() {
+		return this.operationName;
+	}
+	public void setOperationName(String operationName) {
+		this.operationName = operationName;
 	}
 	public List<String> getTableInput() {
 		return tableInput;
@@ -33,6 +49,12 @@ public class Node {
 	}
 	public void setTableNameOutput(String tableNameOutput) {
 		this.tableNameOutput = tableNameOutput;
+	}
+	public String getScanMethod() {
+		return scanMethod;
+	}
+	public void setScanMethod(String scanMethod) {
+		this.scanMethod = scanMethod;
 	}
 	
 	

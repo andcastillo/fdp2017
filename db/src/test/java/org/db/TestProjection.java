@@ -25,7 +25,7 @@ public class TestProjection {
 
         node.setTableInput(tablas);
         node.setParameters(attr);
-        node.setType("Projection");
+        node.setOperationName("Projection");
 
         IOperator op = new Projection();
         String rselt = op.apply(node);
@@ -37,7 +37,7 @@ public class TestProjection {
         Node node1 = new Node();
         node1.setTableInput(tablasalida);
 
-        node1.setType("RemoveRepeated");
+        node1.setOperationName("RemoveRepeated");
 
         IOperator op1 = new RemoveRepeated();
         String table = op1.apply(node1);

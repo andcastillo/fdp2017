@@ -17,7 +17,7 @@ public class TestRemoveRepetedAndSeqScan {
 		
 		Node node = new Node();
 		node.setTableInput(tablas);
-		node.setType("RemoveRepeated");
+		node.setOperationName("RemoveRepeated");
 		
 		IOperator op = new RemoveRepeated();
 		String table = op.apply(node);

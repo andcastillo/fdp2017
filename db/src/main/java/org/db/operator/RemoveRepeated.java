@@ -27,7 +27,7 @@ public class RemoveRepeated implements IOperator{
 	}
 
 	public String apply(Node node) {		
-		if(node.getType().equals("RemoveRepeated")){
+		if(node.getOperationName().equals("RemoveRepeated")){
 			int limit = 10;
 			int blockCount = 1;
 			String tableName = node.getTableInput().get(0);

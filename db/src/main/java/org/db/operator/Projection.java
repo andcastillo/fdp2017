@@ -28,6 +28,9 @@ public class Projection implements IOperator {
     String type;
     Integer items ;
 
+    public Projection() {
+    	
+    }
 
     public void setOperatorName(String name) {
         this.type = name;
@@ -40,7 +43,7 @@ public class Projection implements IOperator {
 
 
     public String apply(Node node) {
-        if(node.getType().equals("Projection")){
+        if(node.getOperationName().equals("Projection")){
             int limit = 10;
             int blockCount = 1;
             String tableName = node.getTableInput().get(0);
@@ -104,7 +107,7 @@ public class Projection implements IOperator {
             Node node1 = new Node();
             node1.setTableInput(tablasalida);
 
-            node1.setType("RemoveRepeated");
+            node1.setOperationName("RemoveRepeated");
 
             IOperator op1 = new RemoveRepeated();
             String table = op1.apply(node1);
