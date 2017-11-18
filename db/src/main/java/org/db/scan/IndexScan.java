@@ -2,14 +2,9 @@ package org.db.scan;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 import org.db.core.Indexer;
-
-import java.util.Enumeration;
 
 public class IndexScan implements Iterator<List<Object>>{
 
@@ -18,20 +13,18 @@ public class IndexScan implements Iterator<List<Object>>{
 
 	private String tableName; 		//Nombre de la tabla (Directorio) a escanear
 	private String columnName;
-	private int limit = 10;			//Limite del tama�o de cada bloque
-	private int countBlocks = 1;	//Contador de bloques
-	private int countRows = 1;		//Contador de registros dentro de cada bloque
 	private String dataSchema; 		//Contiene la informacion del esquema a escanear
 	private Indexer indexer;
-	private Enumeration<String> hashColumnValues;
+	private Iterator<String> blockLines;
 	private String indexMethod;
 
 	public IndexScan(String tableName, String columnName, Indexer indexer) {
 		this.tableName = tableName;
 		this.columnName = columnName;
+		this.indexer = indexer;
 		if (indexer.columnIsHashIndexed(tableName, columnName)) {
 			indexMethod = "hash";
-			hashColumnValues = Indexer.hashIndexes.get(tableName).get(columnName).keys();
+			blockLines = Indexer.hashIndexes.get(tableName).get(columnName).values().iterator();
 		} else if (indexer.columnIsBTreeIndexed(tableName, columnName)) {
 			indexMethod = "btree";
 		} else {
@@ -44,17 +37,15 @@ public class IndexScan implements Iterator<List<Object>>{
 	//De lo contrario se carga el siguiente bloque y se inicia nuevamente el contador de registros
 	@Override
 	public boolean hasNext() {
-		return this.hashColumnValues.hasMoreElements();
+		return this.blockLines.hasNext();
 	}
 
 	@Override
 	public List<Object> next() {
 		if (this.indexMethod.equals("hash")) {
 			//For hash table
-			if (this.hashColumnValues.hasMoreElements()) {
-				String columnValue = this.hashColumnValues.nextElement();
-				Integer blockNumber = indexer.hashIndexes.get(tableName).get(this.columnName).get(columnValue);
-				return findRowInBlock(blockNumber, columnValue);
+			if (this.blockLines.hasNext()) {
+				return findRowInBlock(this.blockLines.next());
 			}
 		} else {
 			//TODO: next for btree
@@ -62,15 +53,20 @@ public class IndexScan implements Iterator<List<Object>>{
 		return null;
 	}
 
-	private List<Object> findRowInBlock (Integer blockNumber, String columnValue) {
+
+	private List<Object> findRowInBlock (String blockLine) {
+		String [] splitBlockLine = blockLine.split(",");
+		Integer blockNumber = Integer.parseInt(splitBlockLine[0]);
+		Integer lineNumber = Integer.parseInt(splitBlockLine[1]);
 		Scanner block = openBlock(blockNumber);
-		List<Object> row;
-		while (block.hasNext()){
-			row = parseRow(block.nextLine());
-			if (row.contains(columnValue)) {
-				return row;
+		for (int i = 0; i<= lineNumber; i++) {
+			String rowAsString = block.nextLine();
+			if (lineNumber == i) {
+				block.close();
+				return parseRow(rowAsString);
 			}
 		}
+		block.close();
 		return null;
 	}
 
@@ -106,7 +102,7 @@ public class IndexScan implements Iterator<List<Object>>{
 		String[] tempSchema = dataSchema.split(DEFAULT_SEPARATOR);
 		List<Object> list = null;
 		if(tempRow.length == tempSchema.length){
-			list = new ArrayList<>();
+			list = new ArrayList<Object>();
 			for (int i = 0; i < tempRow.length; i++) {
 				String[] schemaCol = tempSchema[i].split("-");
 				String data = tempRow[i];
@@ -121,7 +117,6 @@ public class IndexScan implements Iterator<List<Object>>{
 				}
 			}
 		}
-		countRows++;
 		return list;
 	}
 }
