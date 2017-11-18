@@ -46,7 +46,7 @@ public class Projection implements IOperator {
         if(node.getOperationName().equals("Projection")){
             int limit = 10;
             int blockCount = 1;
-            String tableName = node.getTableInput().get(0);
+            String tableName = String.valueOf(node.getTableInput().get(0));
             String TableNameOutput = tableName+"_PR";
             BufferedWriter blockOutput = createOutputFile(TableNameOutput,tableName, blockCount);
 
@@ -101,11 +101,8 @@ public class Projection implements IOperator {
             close(blockOutput);
 
             // ELIMINACION DE REPETIDOS
-            List<String> tablasalida = new ArrayList<String>();
-            tablasalida.add(TableNameOutput);
-
             Node node1 = new Node();
-            node1.setTableInput(tablasalida);
+            node1.addTableInput(TableNameOutput);
 
             node1.setOperationName("RemoveRepeated");
 

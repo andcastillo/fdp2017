@@ -14,28 +14,20 @@ public class TestProjection {
 
 
         // PROYECCION
-        List<String> tablas = new ArrayList<String>();
-        tablas.add("A");
-
-        List<String> attr = new ArrayList<String>();
-        attr.add("id"); // Definir el nombre de atributo
-        attr.add("c"); // Definir el nombre de atributo
-
         Node node = new Node();
 
-        node.setTableInput(tablas);
-        node.setParameters(attr);
+        node.addTableInput("A");
+        node.addParameters("id");
+        node.addParameters("c");
         node.setOperationName("Projection");
 
         IOperator op = new Projection();
         String rselt = op.apply(node);
 
         // ELIMINACION DE REPETIDOS
-        List<String> tablasalida = new ArrayList<String>();
-        tablasalida.add(rselt);
 
         Node node1 = new Node();
-        node1.setTableInput(tablasalida);
+        node1.addTableInput(rselt);
 
         node1.setOperationName("RemoveRepeated");
 
