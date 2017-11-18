@@ -1,16 +1,17 @@
 package org.db.core;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Node {
 
 	private String operationName;
-	private List<String> tableInput;
+	private List<Object> tableInput;
 	private List<String> parameters;
 	private String tableNameOutput;
 	private String scanMethod = "seq";
 	
-	public Node(String operationName, List<String> tableInput, List<String> parameters, 
+	public Node(String operationName, List<Object> tableInput, List<String> parameters, 
 			String tableNameOutput, String scanMethod) {
 		this.operationName = operationName;
 		this.tableInput = tableInput;
@@ -22,7 +23,8 @@ public class Node {
 	
 	
 	public Node() {
-		
+		this.tableInput = new ArrayList<Object>();
+		this.parameters = new ArrayList<String>();
 	}
 	
 	public String getOperationName() {
@@ -31,17 +33,17 @@ public class Node {
 	public void setOperationName(String operationName) {
 		this.operationName = operationName;
 	}
-	public List<String> getTableInput() {
+	public List<Object> getTableInput() {
 		return tableInput;
 	}
-	public void setTableInput(List<String> tablesInput) {
-		this.tableInput = tablesInput;
+	public void addTableInput(Object tablesInput) {
+		this.tableInput.add(tablesInput);
 	}
 	public List<String> getParameters() {
 		return parameters;
 	}
-	public void setParameters(List<String> parameters) {
-		this.parameters = parameters;
+	public void addParameters(String parameters) {
+		this.parameters.add(parameters);
 	}
 	
 	public String getTableNameOutput() {
@@ -56,6 +58,6 @@ public class Node {
 	public void setScanMethod(String scanMethod) {
 		this.scanMethod = scanMethod;
 	}
-	
+
 	
 }

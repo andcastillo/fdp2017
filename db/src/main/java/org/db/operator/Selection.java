@@ -5,8 +5,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -19,16 +21,15 @@ import org.db.core.Node;
 import org.db.scan.SeqScan;
 
 
-/**
- *
- * @author WILMER
+/*
+ * @author Eduardo Arango 
  */
-public class Projection implements IOperator {
+public class Selection implements IOperator {
 
     String type;
     Integer items ;
 
-    public Projection() {
+    public Selection() {
     	
     }
 
@@ -43,11 +44,11 @@ public class Projection implements IOperator {
 
 
     public String apply(Node node) {
-        if(node.getOperationName().equals("Projection")){
+        if(node.getOperationName().equals("Selection")){
             int limit = 10;
             int blockCount = 1;
-            String tableName = String.valueOf(node.getTableInput().get(0));
-            String TableNameOutput = tableName+"_PR";
+            String tableName = node.getTableInput().get(0);
+            String TableNameOutput = tableName+"_WHERE";
             BufferedWriter blockOutput = createOutputFile(TableNameOutput,tableName, blockCount);
 
             List<String> attr = node.getParameters();
@@ -76,21 +77,32 @@ public class Projection implements IOperator {
                 Logger.getLogger(Projection.class.getName()).log(Level.SEVERE, null, ex);
             }
 
+          // Funcion de seleccion (WHERE)
             SeqScan scan = new SeqScan(tableName);
             items =0;
             while (scan.hasNext()) {
+                
                 List<Object> rowObject = (List<Object>) scan.next();
                 try {
+                
                     String rowStr = "";
+                    // TODO : definir en NODO.java lista de condiciones
+                    String whereCondition = ;
+                    
                     for (Integer i: pos){
-                        rowStr += ','+rowObject.get(i).toString();
+                        if  ( whereCondition.equals(rowObject.get(i).toString();) ) {
+                        rowStr += rowObject.toString();
+                        }
                     }
-                    //System.out.println("Pt:"+rowStr.substring(1));
-                    blockOutput.write(rowStr.substring(1));
+                    
+                    //System.out.println("Wh:"+rowStr.substring(1));
+                    blockOutput.write(rowStr);
                     blockOutput.newLine();
+                    
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                
                 items++;
                 if(items % limit == 0 && scan.hasNext()){
                     blockCount++;
@@ -101,8 +113,11 @@ public class Projection implements IOperator {
             close(blockOutput);
 
             // ELIMINACION DE REPETIDOS
+            List<String> tablasalida = new ArrayList<String>();
+            tablasalida.add(TableNameOutput);
+
             Node node1 = new Node();
-            node1.addTableInput(TableNameOutput);
+            node1.setTableInput(tablasalida);
 
             node1.setOperationName("RemoveRepeated");
 
@@ -154,7 +169,7 @@ public class Projection implements IOperator {
             File file = new File(dir+"/"+block+".csv");
             return new BufferedWriter(new FileWriter(file));
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            // TODO: Auto-generated catch block
             e.printStackTrace();
         }
         return null;
@@ -166,7 +181,7 @@ public class Projection implements IOperator {
             try {
                 output.close();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
+                // TODO: Auto-generated catch block
                 e.printStackTrace();
             }
         }
@@ -209,3 +224,6 @@ public class Projection implements IOperator {
 
 
 }
+#
+# EOF!
+#

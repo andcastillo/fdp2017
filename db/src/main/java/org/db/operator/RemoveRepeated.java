@@ -30,7 +30,7 @@ public class RemoveRepeated implements IOperator{
 		if(node.getOperationName().equals("RemoveRepeated")){
 			int limit = 10;
 			int blockCount = 1;
-			String tableName = node.getTableInput().get(0);
+			String tableName = String.valueOf(node.getTableInput().get(0));
 			String TableNameOutput = tableName+"_RR";					//La tabla de salida es un directorio con nombre Ej: A_RR
 			BufferedWriter blockOutput = 
 					createOutputFile(TableNameOutput,tableName, blockCount);	//Se crea el primer bloque en el direcctorio Ej: A_RR/A_1.csv 

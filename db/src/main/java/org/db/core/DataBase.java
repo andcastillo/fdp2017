@@ -47,12 +47,12 @@ public class DataBase {
 	}
 
 	private Object parserSQL(String sql){
-		List<String> tables = new ArrayList<String>();
-		tables.add("A");
+		List<Object> tables = new ArrayList<Object>();
+		tables.add(sql);
 		List<String> parameters = new ArrayList<String>();
 		parameters.add("id");
 		parameters.add("x");
-		Node node = new Node("Projection", tables, parameters, "A_ggg", null);
+		Node node = new Node("RemoveRepeated", tables, parameters, sql + "_ggg", null);
 		return node;
 	}
 

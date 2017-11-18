@@ -12,11 +12,8 @@ public class TestRemoveRepetedAndSeqScan {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
-		List<String> tablas = new ArrayList<String>();
-		tablas.add("A");
-		
 		Node node = new Node();
-		node.setTableInput(tablas);
+		node.addTableInput("A");
 		node.setOperationName("RemoveRepeated");
 		
 		IOperator op = new RemoveRepeated();
