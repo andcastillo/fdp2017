@@ -2,15 +2,17 @@ package org.db.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import org.db.util.BTree;
 
 import java.util.Hashtable;
+import com.google.common.collect.HashMultimap;
 
 public class Indexer {
-    public static Hashtable<String, Hashtable<String, Hashtable<String, Integer>>> hashIndexes = new Hashtable <String, Hashtable<String, Hashtable<String, Integer>>>();
-    public static Hashtable<String, Hashtable<String, BTree>> btreeIndexes = new Hashtable<String, Hashtable<String, BTree>>();
+    public static Hashtable<String, Hashtable<String, HashMultimap<String, String>>> hashIndexes = new Hashtable<String, Hashtable<String, HashMultimap<String, String>>>();
+    public static Hashtable<String, Hashtable<String, BTree<String, ArrayList<String>>>> btreeIndexes = new Hashtable<String, Hashtable<String, BTree<String, ArrayList<String>>>>();
     private static final String DEFAULT_SEPARATOR = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
     private String dataSchema; 		//Contiene la informacion del esquema a escanea
     private int countBlocks = 1;	//Contador de bloques
@@ -21,8 +23,8 @@ public class Indexer {
 
     public void indexTable(String tableName) {
         readSchema(tableName);
-        btreeIndexes.put(tableName, new Hashtable<String, BTree>());
-        hashIndexes.put(tableName, new Hashtable<String, Hashtable<String, Integer>>());
+        btreeIndexes.put(tableName, new Hashtable<String, BTree<String, ArrayList<String>>>());
+        hashIndexes.put(tableName, new Hashtable<String, HashMultimap<String, String>>());
         String[] tempSchema = dataSchema.split(DEFAULT_SEPARATOR);
         for (int i = 0; i < tempSchema.length; i++) {
             String[] schemaCol = tempSchema[i].split("-");
@@ -45,8 +47,8 @@ public class Indexer {
     }
 
     private void addIndex(int columnIndex, String tableName, String columnName, String methodName) {
-        Hashtable<String, Integer> hashtable = new Hashtable<String, Integer>();
-        BTree btree = new BTree();
+        HashMultimap<String, String> hashMultimap = HashMultimap.create();
+        BTree <String, ArrayList<String>> btree = new BTree<String, ArrayList<String>>();
         countBlocks = 1;
         inputStream = nextBlock(tableName);
         do {
@@ -55,18 +57,23 @@ public class Indexer {
                 String row = inputStream.nextLine();
                 String[] tempRow = row.split(DEFAULT_SEPARATOR);
                 String key = tempRow[columnIndex];
-                Integer block = countBlocks - 1;
+                String blockLine = (countBlocks - 1) + "," + countRows;
                 if (methodName.equals("hash")) {
-                    hashtable.put(key, block);
+                    hashMultimap.put(key, blockLine);
                 } else {
-                    btree.put(key, block);
+                    if (btree.get(key) == null) {
+                        ArrayList<String> directions = new ArrayList<String>();
+                        btree.put(key, directions);
+
+                    }
+                    btree.get(key).add(blockLine);
                 }
                 countRows++;
             }
             inputStream = nextBlock(tableName);
         } while (inputStream != null);
         if (methodName.equals("hash")) {
-            hashIndexes.get(tableName).put(columnName, hashtable);
+            hashIndexes.get(tableName).put(columnName, hashMultimap);
         } else {
             btreeIndexes.get(tableName).put(columnName, btree);
         }
