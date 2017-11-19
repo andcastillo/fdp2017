@@ -24,11 +24,15 @@ public class IndexScan implements Iterator<List<Object>>{
 		this.indexer = indexer;
 		if (indexer.columnIsHashIndexed(tableName, columnName)) {
 			indexMethod = "hash";
-			blockLines = Indexer.hashIndexes.get(tableName).get(columnName).values().iterator();
 		} else if (indexer.columnIsBTreeIndexed(tableName, columnName)) {
 			indexMethod = "btree";
 		} else {
-			// TODO: indexColumn
+			indexMethod = indexer.indexColumn(tableName, columnName);
+		}
+		if (indexMethod.equals("hash")) {
+			blockLines = Indexer.hashIndexes.get(tableName).get(columnName).values().iterator();
+		} else {
+			// btree iterator
 		}
 		loadSchema();
 	}

@@ -7,6 +7,12 @@ public class Attribute {
 	String columnName;
 	String type;
 
+	public Attribute(int index, Object scan, String columnName) {
+		super();
+		this.index = index;
+		this.scan = scan;
+		this.columnName = columnName;
+	}
 	public Attribute(int index, Object scan, String columnName, String type) {
 		super();
 		this.index = index;
