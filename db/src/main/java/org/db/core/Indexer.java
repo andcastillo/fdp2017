@@ -22,12 +22,11 @@ public class Indexer {
     public Indexer () {}
 
     public void indexTable(String tableName) {
-        readSchema(tableName);
-        btreeIndexes.put(tableName, new Hashtable<String, BTree<String, ArrayList<String>>>());
-        hashIndexes.put(tableName, new Hashtable<String, HashMultimap<String, String>>());
+        updateSchema(tableName);
+        addEntriesForTableInIndexStructures(tableName);
         Attribute[] schemaAttributes = dataSchema.getAttribute();
         for (int i = 0; i < schemaAttributes.length; i++) {
-            if(schemaAttributes[i].getScan().equals("hash") || schemaAttributes[i].getScan().equals("btree")){
+            if(!schemaAttributes[i].getScan().equals("none")){
                 addIndex(tableName, schemaAttributes[i]);
             }
         }
@@ -43,6 +42,39 @@ public class Indexer {
 
     public Boolean columnIsHashIndexed (String tableName, String columnName) {
         return hashIndexes.containsKey(tableName) && hashIndexes.get(tableName).containsKey(columnName);
+    }
+
+    private Boolean isTableInTableInIndexStructures(String tableName) {
+        return btreeIndexes.containsKey(tableName) || hashIndexes.containsKey(tableName);
+    }
+
+    private void addEntriesForTableInIndexStructures(String tableName) {
+        btreeIndexes.put(tableName, new Hashtable<String, BTree<String, ArrayList<String>>>());
+        hashIndexes.put(tableName, new Hashtable<String, HashMultimap<String, String>>());
+    }
+
+    public String indexColumn(String tableName, String attributeName) {
+        updateSchema(tableName);
+        if (!isTableInTableInIndexStructures(tableName)) {
+            addEntriesForTableInIndexStructures(tableName);
+        }
+        if (!columnIsIndexed(tableName, attributeName)) {
+            Attribute[] schemaAttributes = dataSchema.getAttribute();
+            for (int i = 0; i < schemaAttributes.length; i++) {
+                if(schemaAttributes[i].getColumnName().equals(attributeName) &&
+                        schemaAttributes[i].getScan().equals("none")){
+                    String scanMethod = "hash";
+                    if (schemaAttributes[i].getType().equals("Integer") ||
+                            schemaAttributes[i].getType().equals("Double")) {
+                        scanMethod = "btree";
+                    }
+                    schemaAttributes[i].setScan(scanMethod);
+                    addIndex(tableName, schemaAttributes[i]);
+                    return  scanMethod;
+                }
+            }
+        }
+        return null;
     }
 
     private void addIndex(String tableName, Attribute attribute) {
@@ -79,7 +111,7 @@ public class Indexer {
         this.close();
     }
 
-    private void readSchema(String tableName){
+    private void updateSchema(String tableName){
         String path = "data/myDB/"+tableName+"/schema.txt";
         File file = new File(path); //Se carga el esquema
         try {
@@ -98,11 +130,11 @@ public class Indexer {
         Schema schema = new Schema(path, tempSchema.length);
         for (int i = 0; i < tempSchema.length; i++) {
             String[] schemaCol = tempSchema[i].split("-");
-            String scanMethod = "";
+            String scanMethod = "none";
             if(schemaCol.length == 3){
                 scanMethod = schemaCol[2];
             }
-            schema.addAttribute(new Attribute(i, scanMethod, schemaCol[0]), i);
+            schema.addAttribute(new Attribute(i, scanMethod, schemaCol[0], schemaCol[1]), i);
         }
         return schema;
     }
