@@ -14,7 +14,7 @@ public class Indexer {
     public static Hashtable<String, Hashtable<String, HashMultimap<String, String>>> hashIndexes = new Hashtable<String, Hashtable<String, HashMultimap<String, String>>>();
     public static Hashtable<String, Hashtable<String, BTree<String, ArrayList<String>>>> btreeIndexes = new Hashtable<String, Hashtable<String, BTree<String, ArrayList<String>>>>();
     private static final String DEFAULT_SEPARATOR = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
-    private String dataSchema; 		//Contiene la informacion del esquema a escanea
+    private Schema dataSchema; 		//Contiene la informacion del esquema a escanea
     private int countBlocks = 1;	//Contador de bloques
     private int blockSize = 10;			//Limite del tama�o de cada bloque
     private Scanner inputStream;
@@ -25,11 +25,10 @@ public class Indexer {
         readSchema(tableName);
         btreeIndexes.put(tableName, new Hashtable<String, BTree<String, ArrayList<String>>>());
         hashIndexes.put(tableName, new Hashtable<String, HashMultimap<String, String>>());
-        String[] tempSchema = dataSchema.split(DEFAULT_SEPARATOR);
-        for (int i = 0; i < tempSchema.length; i++) {
-            String[] schemaCol = tempSchema[i].split("-");
-            if(schemaCol.length == 3){
-                addIndex(i, tableName, schemaCol[0], schemaCol[2]);
+        Attribute[] schemaAttributes = dataSchema.getAttribute();
+        for (int i = 0; i < schemaAttributes.length; i++) {
+            if(schemaAttributes[i].getScan().equals("hash") || schemaAttributes[i].getScan().equals("btree")){
+                addIndex(tableName, schemaAttributes[i]);
             }
         }
     }
@@ -46,7 +45,7 @@ public class Indexer {
         return hashIndexes.containsKey(tableName) && hashIndexes.get(tableName).containsKey(columnName);
     }
 
-    private void addIndex(int columnIndex, String tableName, String columnName, String methodName) {
+    private void addIndex(String tableName, Attribute attribute) {
         HashMultimap<String, String> hashMultimap = HashMultimap.create();
         BTree <String, ArrayList<String>> btree = new BTree<String, ArrayList<String>>();
         countBlocks = 1;
@@ -56,9 +55,9 @@ public class Indexer {
             while (countRows < blockSize && inputStream.hasNext()) {
                 String row = inputStream.nextLine();
                 String[] tempRow = row.split(DEFAULT_SEPARATOR);
-                String key = tempRow[columnIndex];
+                String key = tempRow[attribute.getIndex()];
                 String blockLine = (countBlocks - 1) + "," + countRows;
-                if (methodName.equals("hash")) {
+                if (attribute.getScan().equals("hash")) {
                     hashMultimap.put(key, blockLine);
                 } else {
                     if (btree.get(key) == null) {
@@ -72,25 +71,40 @@ public class Indexer {
             }
             inputStream = nextBlock(tableName);
         } while (inputStream != null);
-        if (methodName.equals("hash")) {
-            hashIndexes.get(tableName).put(columnName, hashMultimap);
+        if (attribute.getScan().equals("hash")) {
+            hashIndexes.get(tableName).put(attribute.getColumnName(), hashMultimap);
         } else {
-            btreeIndexes.get(tableName).put(columnName, btree);
+            btreeIndexes.get(tableName).put(attribute.getColumnName(), btree);
         }
         this.close();
     }
 
     private void readSchema(String tableName){
-        File file = new File("data/myDB/"+tableName+"/schema.txt"); //Se carga el esquema
+        String path = "data/myDB/"+tableName+"/schema.txt";
+        File file = new File(path); //Se carga el esquema
         try {
             Scanner inputStream = new Scanner(file);
             while (inputStream.hasNext()) {
-                dataSchema = inputStream.nextLine();
+                this.dataSchema = getSchemaFromString(inputStream.nextLine(), path);
             }
             inputStream.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    private Schema getSchemaFromString (String schemaString, String path){
+        String[] tempSchema = schemaString.split(DEFAULT_SEPARATOR);
+        Schema schema = new Schema(path, tempSchema.length);
+        for (int i = 0; i < tempSchema.length; i++) {
+            String[] schemaCol = tempSchema[i].split("-");
+            String scanMethod = "";
+            if(schemaCol.length == 3){
+                scanMethod = schemaCol[2];
+            }
+            schema.addAttribute(new Attribute(i, scanMethod, schemaCol[0]), i);
+        }
+        return schema;
     }
 
     private Scanner nextBlock(String tableName){
