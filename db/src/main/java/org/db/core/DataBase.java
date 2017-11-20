@@ -2,15 +2,19 @@ package org.db.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.db.operator.IOperator;
 import org.db.operator.Projection;
+
+import com.google.gson.Gson;
 
 
 public class DataBase {
@@ -19,7 +23,7 @@ public class DataBase {
 	private static final String DEFAULT_SEPARATOR = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
 	private HashMap<String, Schema> schemaMaps;
 	private String database;
-	static final int LIMIT = 10;			//Limite del tama�o de cada bloque
+	public static final int LIMIT = 10;			//Limite del tama�o de cada bloque
 
 	//adicionar variables con los esquema y indices
 
@@ -41,20 +45,23 @@ public class DataBase {
 
 
 	public String query(String queryStr){
-		Object executionTree = parserSQL(queryStr);//llamado al parseador
-		return executeSQL(executionTree); //llamado a ejecutar la consula con el arbol generado por el parseador
+		Node node = (new Gson()).fromJson(queryStr, Node.class); 
+		Object executionTree = parserSQL(node);//llamado al parseador
+		return String.valueOf(executionTree); 
 
 	}
 
-	private Object parserSQL(String sql){
-		List<Object> tables = new ArrayList<Object>();
-		tables.add(sql);
-		List<String> parameters = new ArrayList<String>();
-		parameters.add("id");
-		parameters.add("x");
-		Node node = new Node("RemoveRepeated", tables, parameters, sql + "_ggg", null);
-		return node;
-	}
+	private Object parserSQL(Node root){ 
+		List<Object> tables = root.getTableInput();
+		for (int i = 0; i < tables.size(); i++) {
+			Object node = tables.get(i);
+			if(node instanceof Node) {
+				Node tmp = (Node) node;
+				tables.set(i, parserSQL(tmp));
+			}			
+		}
+		return executeSQL(root);//llamado a ejecutar la consula con el arbol generado por el parseador
+	} 
 
 	private String executeSQL(Object executionTree) {
 
@@ -148,7 +155,7 @@ public class DataBase {
 						}        				
 					}
 
-					Attribute attrib = new Attribute(i, pathIndex, column[0]);
+					Attribute attrib = new Attribute(i, pathIndex, column[0],column[1]);
 					//Adicionar el Index a la lista en pareja ej: (Apellido,IndexHash)..
 					schema.addAttribute(attrib, i);		
 				}		                   
@@ -162,5 +169,44 @@ public class DataBase {
 		//Se adiciona el esquema cargado a la lista de esquemas.
 		schemaMaps.put(table, schema);
 	}
+
+	public String getDatabase() {
+		return database;
+	}
+
+	public void setDatabase(String database) {
+		this.database = database;
+	}
+	
+
+    // ELIMINACION DE ARCHIVOS TEMP PROJECTION
+	public void removeTempFile(String table){
+	    File file = new File("data/"+getDatabase()+"/"+table);
+	    try {
+	        delete(file);					//Se elimina el fichero tabla
+	        getSchemaMaps().remove(table);	//Se elimina el esquema cargado de la tabla cargada
+	    } catch (IOException ex) {
+	        Logger.getLogger(Projection.class.getName()).log(Level.SEVERE, null, ex);
+	    }
+	}
+	
+	private void delete(File file) throws IOException {
+
+        for (File childFile : file.listFiles()) {
+
+            if (childFile.isDirectory()) {
+                delete(childFile);
+            } else {
+                if (!childFile.delete()) {
+                    throw new IOException();
+                }
+            }
+        }
+
+        if (!file.delete()) {
+            throw new IOException();
+        }
+    }
+    // FIN ELIMINACION DE ARCHIVOS TEMP PROJECTION
 
 }

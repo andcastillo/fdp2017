@@ -7,16 +7,20 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
+import org.db.core.Attribute;
+import org.db.core.DataBase;
+import org.db.core.Schema;
+
 public class SeqScan implements Iterator<List<Object>>{
 
 
     private static final String DEFAULT_SEPARATOR = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
     
 	private String tableName; 		//Nombre de la tabla (Directorio) a escanear
-	private int limit = 10;			//Limite del tama�o de cada bloque
+	//private int limit = 10;			//Remplazado por una variable global en DataBase.LIMIT
 	private int countBlocks = 1;	//Contador de bloques
 	private int countRows = 1;		//Contador de registros dentro de cada bloque
-	private String dataSchema; 		//Contiene la informacion del esquema a escanear
+	private Schema dataSchema; 		//Contiene la informacion del esquema a escanear
 	private Scanner inputStream;	
 	
 	
@@ -25,17 +29,11 @@ public class SeqScan implements Iterator<List<Object>>{
 	}
 	
 	public void open(String tableName){
-		this.tableName = tableName;
-		File file = new File("data/myDB/"+tableName+"/schema.txt"); //Se carga el esquema
-		try {
-			Scanner inputStream = new Scanner(file);
-			while (inputStream.hasNext()) {
-				dataSchema = inputStream.nextLine(); 
-			}
-			inputStream.close(); 
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();			
-		}
+		this.tableName = tableName; 
+		if(DataBase.getInstance().getSchemaMaps().get(tableName) == null){
+			DataBase.getInstance().auxLoadSchema(DataBase.getInstance().getDatabase(), tableName);
+		}	
+		this.dataSchema = DataBase.getInstance().getSchemaMaps().get(tableName);	
         nextBlock();									//Se inicializa en el primer Bloque
 	}
 
@@ -43,7 +41,7 @@ public class SeqScan implements Iterator<List<Object>>{
 	//De lo contrario se carga el siguiente bloque y se inicia nuevamente el contador de registros
 	public boolean hasNext() {		
 
-		if(countRows > limit || !inputStream.hasNext()){
+		if(countRows > DataBase.LIMIT || !inputStream.hasNext()){
 			this.close();
 			inputStream = nextBlock();
 			if(inputStream == null){
@@ -67,20 +65,19 @@ public class SeqScan implements Iterator<List<Object>>{
 			}
 	}
 	
-	public List<Object> parseRow(String row , String schema){
-		String[] tempRow = row.split(DEFAULT_SEPARATOR);
-		String[] tempSchema = schema.split(DEFAULT_SEPARATOR);
+	public List<Object> parseRow(String row , Schema schema){
+		String[] tempRow = row.split(DEFAULT_SEPARATOR); 
 		List<Object> list = null;
-		if(tempRow.length == tempSchema.length){
+		if(tempRow.length == schema.getAttribute().length){
 			list = new ArrayList<Object>();
 			for (int i = 0; i < tempRow.length; i++) {
-				String[] schemaCol = tempSchema[i].split("-");
+				Attribute columnAttribute = schema.getAttribute()[i];
 				String data = tempRow[i];
-				if(schemaCol[1].equals("Integer")){
+				if(columnAttribute.getType().equals("Integer")){
 					list.add(Integer.parseInt(data));
-				}else if (schemaCol[1].equals("Double")){
+				}else if (columnAttribute.getType().equals("Double")){
 					list.add(Double.parseDouble(data));
-				}else if (schemaCol[1].equals("Boolean")){
+				}else if (columnAttribute.getType().equals("Boolean")){
 					list.add(Boolean.parseBoolean(data));
 				}else {//String
 					list.add(String.valueOf(data));

@@ -8,13 +8,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.db.core.DataBase;
 import org.db.core.Node;
 import org.db.scan.SeqScan;
 
@@ -43,8 +42,7 @@ public class Projection implements IOperator {
 
 
     public String apply(Node node) {
-        if(node.getOperationName().equals("Projection")){
-            int limit = 10;
+        if(node.getOperationName().equals("Projection")){ 
             int blockCount = 1;
             String tableName = String.valueOf(node.getTableInput().get(0));
             String TableNameOutput = tableName+"_PR";
@@ -92,7 +90,7 @@ public class Projection implements IOperator {
                     e.printStackTrace();
                 }
                 items++;
-                if(items % limit == 0 && scan.hasNext()){
+                if(items % DataBase.LIMIT == 0 && scan.hasNext()){
                     blockCount++;
                     close(blockOutput);
                     blockOutput = createOutputFile(TableNameOutput, tableName, blockCount);
@@ -103,22 +101,14 @@ public class Projection implements IOperator {
             // ELIMINACION DE REPETIDOS
             Node node1 = new Node();
             node1.addTableInput(TableNameOutput);
-
             node1.setOperationName("RemoveRepeated");
-
             IOperator op1 = new RemoveRepeated();
             String table = op1.apply(node1);
-
+            	// ELIMINACION DE ARCHIVOS TEMP PROJECTION
+            	DataBase.getInstance().removeTempFile(TableNameOutput);
+            	// FIN ELIMINACION DE ARCHIVOS TEMP PROJECTION
+            	
             // FIN ELIMINACION DE REPETIDOS
-
-            // ELIMINACION DE ARCHIVOS TEMP PROJECTION
-            File file = new File("data/myDB/"+TableNameOutput);
-            try {
-                delete(file);
-            } catch (IOException ex) {
-                Logger.getLogger(Projection.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            // FIN ELIMINACION DE ARCHIVOS TEMP PROJECTION
 
             node.setTableNameOutput(table);
             return table;
@@ -189,23 +179,7 @@ public class Projection implements IOperator {
     }
 
 
-    private static void delete(File file) throws IOException {
-
-        for (File childFile : file.listFiles()) {
-
-            if (childFile.isDirectory()) {
-                delete(childFile);
-            } else {
-                if (!childFile.delete()) {
-                    throw new IOException();
-                }
-            }
-        }
-
-        if (!file.delete()) {
-            throw new IOException();
-        }
-    }
+    
 
 
 }

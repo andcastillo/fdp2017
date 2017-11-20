@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.db.core.DataBase;
 import org.db.core.Node;
 import org.db.scan.SeqScan;
 
@@ -28,7 +29,6 @@ public class RemoveRepeated implements IOperator{
 
 	public String apply(Node node) {		
 		if(node.getOperationName().equals("RemoveRepeated")){
-			int limit = 10;
 			int blockCount = 1;
 			String tableName = String.valueOf(node.getTableInput().get(0));
 			String TableNameOutput = tableName+"_RR";					//La tabla de salida es un directorio con nombre Ej: A_RR
@@ -44,13 +44,12 @@ public class RemoveRepeated implements IOperator{
 						for (Object object: rowObject){
 							rowStr = rowStr+","+String.valueOf(object);	
 							}
-						//System.out.println("Pt:"+ rowStr.substring(1));
 						blockOutput.write(rowStr.substring(1));					//Se escribe en el fichero
 						blockOutput.newLine();
 						} catch (IOException e) {
 							e.printStackTrace();
 						}							
-					if(items.size()% limit == 0 && scan.hasNext()){	//Cuando se llena el un bloque se crea uno nuevo en el mismo directorio si existe un seguiente registro
+					if(items.size()% DataBase.LIMIT == 0 && scan.hasNext()){	//Cuando se llena el un bloque se crea uno nuevo en el mismo directorio si existe un seguiente registro
 						blockCount++;
 						close(blockOutput);							//Se cierra el bloque anterior
 						blockOutput = createOutputFile(TableNameOutput, tableName, blockCount);						

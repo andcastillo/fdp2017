@@ -1,17 +1,12 @@
 package org.db;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
 import java.util.Scanner;
 
 import org.db.core.DataBase;
 import org.db.core.Node;
-import org.db.operator.IOperator;
-import org.db.operator.Projection;
-import org.db.operator.RemoveRepeated;
 
 import com.google.gson.Gson;
-
 
 public class TestMain {
 	static Scanner scanner;
@@ -23,10 +18,10 @@ public class TestMain {
 
 
         Node node = new Node();
-        node.setOperationName("Join");
+        node.setOperationName("Projection");
         node.addTableInput("A");
-        node.addParameters("id");
         node.addParameters("c");
+        node.addParameters("id");
         
 
         Node node1 = new Node();
@@ -34,42 +29,50 @@ public class TestMain {
         node1.addTableInput("A");
         node1.addParameters("id");
         node1.addParameters("c");
+        node1.addParameters("b");
+        node1.addParameters("x");
         
         node.addTableInput(node1);
-        // ELIMINACION DE REPETIDOS
-        ArrayList<Node> Nodos = new ArrayList<>();
-        Nodos.add(node);
-		Gson g = new Gson();
-		//String playersList=  g.fromJson(node,            Node.class);
-		
-		String playist=  g.toJson(node,  Node.class);
-		System.out.println("Json:"+playist);
-		
+        
+		Gson gson = new Gson();
+		String jsonExample =  gson.toJson(node,  Node.class);//Se convierten los nodos a String 
+		System.out.println("Json:"+jsonExample);
 		DataBase.initDataBase("myDB");
 		//Los siguientes prints en pantalla muestran como se usa el acceso a la bd
-		System.out.println("Como acceder a la base de datos:"+DataBase.getInstance().getSchemaMaps().size());
-		System.out.println("Como acceder a la base de datos:"+
-					DataBase.getInstance().getSchemaMaps().get("A"));//Obtenemos el esquema de A (Imprime Schema@4554617c puesto que es un objeto)
-		System.out.println("Como acceder a la base de datos:"+
-				DataBase.getInstance().getSchemaMaps().get("A").getAttribute()[0].getColumnName());//Obtenemos el esquema de A y luego los tipos de datos de A
-		
+		//System.out.println("Como acceder a la base de datos:"+DataBase.getInstance().getSchemaMaps().size());
+		//System.out.println("Como acceder a la base de datos:"+
+		//			DataBase.getInstance().getSchemaMaps().get("A"));//Obtenemos el esquema de A (Imprime Schema@4554617c puesto que es un objeto)
+		//System.out.println("Como acceder a la base de datos:"+
+		//		DataBase.getInstance().getSchemaMaps().get("A").getAttribute()[0].getColumnName());//Obtenemos el esquema de A y luego los tipos de datos de A
+
+	    
 		scanner = new Scanner (System.in);
 		
 		boolean status = true;
 		while (status) {
 			input = scanner.nextLine ();				//Recibe el texto ingresado por consola
+			String output = "";
 			if(input.equals("0")||input.equals("Exit")){//Dos opciones para salir digitando 0 o Exit
 				status = false;
 			}else{
-				DataBase.getInstance().query(input);			//llamado a ejecutar consulta a la base de datos
+				input = jsonExample;	//Test Se usa el String para probar las entradas en formato Json
+				output = DataBase.getInstance().query(input);			//llamado a ejecutar consulta a la base de datos
 			}
 			
-			System.out.println ("Consulta: \"" + input +"\"");
+			System.out.println ("ResultTable:" + output +"");
+			//openResult(output);abrir el resultado pero
 		}
 		System.out.println("Saliendo...");
 	} //Cierre del main
 	
-	
+	/*public static void openResult(String tabla){
+		try {
+            Runtime obj = Runtime.getRuntime(); 
+            obj.exec("notepad "+System.getProperty("user.dir")+"\\data/myDB/"+tabla+"/1.csv");
+        } catch (IOException ex) {
+             System.out.println("IOException "+ex.getMessage());
+        }
+	}*/
 /*
 import java.util.Enumeration;
 
