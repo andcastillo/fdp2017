@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -36,7 +37,6 @@ public class Selection implements IOperator {
         this.type = name;
     }
 
-
     public String getOperatorName() {
         return type;
     }
@@ -63,8 +63,8 @@ public class Selection implements IOperator {
             List<Integer> pos = new ArrayList<Integer>();
             for (Object object: attr){ pos.add(columns.indexOf(object));}
 
-            List<String> SchemaProje =new ArrayList<String>();
-            for (Integer i: pos){ SchemaProje.add(parts_schema[i]);}
+            List<String> SchemaSelect =new ArrayList<String>();
+            for (Integer i: pos){ SchemaSelect.add(parts_schema[i]);}
 
             String lineschema = "";
 
@@ -76,7 +76,8 @@ public class Selection implements IOperator {
                 Logger.getLogger(Projection.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-          // Funcion de seleccion (WHERE)
+          // Funcion de seleccion 
+          // (WHERE TABLE.COLUMN {CONDITION} CONSTANT)
             SeqScan scan = new SeqScan(tableName);
             items =0;
             while (scan.hasNext()) {
@@ -85,22 +86,53 @@ public class Selection implements IOperator {
                 try {
                 
                     String rowStr = "";
-                    // TODO : definir en NODO.java lista de condiciones
-                    String whereCondition = "";
-                    
+                    String whereCondition = node.getWhereCondition();
+                    String constant = node.getConstant();
+                   // if node.getWhereCondition(); == "="
+                    if(node.getWhereCondition().equals("=")){
                     for (Integer i: pos){
-                        if  ( whereCondition.equals(rowObject.get(i).toString()) ) {
+                        if  ( constant.equals(rowObject.get(i).toString()) ) {
                         rowStr += rowObject.toString();
                         }
                     }
                     
-                    //System.out.println("Wh:"+rowStr.substring(1));
                     blockOutput.write(rowStr);
                     blockOutput.newLine();
                     
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                    
+                 // if node.getWhereCondition(); == "<"
+                    if(node.getWhereCondition().equals("<")){
+                    for (Integer i: pos){
+                        if  ( constant < (rowObject.get(i).toString()) ) {
+                        rowStr += rowObject.toString();
+                        }
+                    }
+                    
+                    blockOutput.write(rowStr);
+                    blockOutput.newLine();
+                    
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                    
+                // if node.getWhereCondition(); == ">"
+                    if(node.getWhereCondition().equals(">")){
+                    for (Integer i: pos){
+                        if  ( constant > (rowObject.get(i).toString()) ) {
+                        rowStr += rowObject.toString();
+                        }
+                    }
+                    
+                    blockOutput.write(rowStr);
+                    blockOutput.newLine();
+                    
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                    // END SELECTION func
                 
                 items++;
                 if(items % limit == 0 && scan.hasNext()){
@@ -133,11 +165,8 @@ public class Selection implements IOperator {
 
             node.setTableNameOutput(table);
             return table;
-
-
         }
         return null;
-
     }
 
 
@@ -169,7 +198,6 @@ public class Selection implements IOperator {
             e.printStackTrace();
         }
         return null;
-
     }
 
     public void close(BufferedWriter output){
@@ -196,9 +224,7 @@ public class Selection implements IOperator {
             e.printStackTrace();
         }
         return dataSchema;
-
     }
-
 
     private static void delete(File file) throws IOException {
 
@@ -217,6 +243,6 @@ public class Selection implements IOperator {
             throw new IOException();
         }
     }
-
-
 }
+
+//EOF!
