@@ -19,7 +19,6 @@ import org.db.scan.SeqScan;
 
 
 /**
- *
  * @author WILMER
  */
 public class Projection implements IOperator {
@@ -35,11 +34,9 @@ public class Projection implements IOperator {
         this.type = name;
     }
 
-
     public String getOperatorName() {
         return type;
     }
-
 
     public String apply(Node node) {
         if(node.getOperationName().equals("Projection")){ 
@@ -112,14 +109,9 @@ public class Projection implements IOperator {
 
             node.setTableNameOutput(table);
             return table;
-
-
         }
         return null;
-
     }
-
-
 
     public static void writeschema(String dirStr, String tableName, String line) throws FileNotFoundException, IOException {
         File dir = new File("data/myDB/"+dirStr);
@@ -133,7 +125,6 @@ public class Projection implements IOperator {
         bw.newLine();
         bw.close();
     }
-
 
     public BufferedWriter createOutputFile(String dirStr, String tableName, int block){
         File dir = new File("data/myDB/"+dirStr);
@@ -177,9 +168,4 @@ public class Projection implements IOperator {
         return dataSchema;
 
     }
-
-
-    
-
-
 }
