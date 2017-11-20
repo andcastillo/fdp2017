@@ -7,7 +7,9 @@ public class Node {
 
 	private String operationName;
 	private String tableNameOutput;
+	// VARS for SELECTION func
 	private String whereCondition;
+	private	String	constant;
 	private String scanMethod = "seq";
 	
 	private List<Object> tableInput;
@@ -65,7 +67,13 @@ public class Node {
 	public String getWhereCondition() {
 		return whereCondition;
 	}
-	public void setWhereCondition(String whereCondition) {
+	
+	public String getConstant() {
+		return constant;
+	}
+	
+	public void setWhereCondition(String whereCondition, String constant) {
+		this.constant = constant;
 		this.whereCondition = whereCondition;
 	}
 
