@@ -88,8 +88,14 @@ public class Selection implements IOperator {
                     String rowStr = "";
                     String whereCondition = node.getWhereCondition();
                     String constant = node.getConstant();
+                    
           // if node.getWhereCondition(); == "="
             if(node.getWhereCondition().equals("=")){
+          // Sanity check, checks for same data type or return null
+                if (rowObject.get(pos) != node.getConstant()){
+                return null
+                }
+
                        for (Integer i: pos){
                             if  ( constant.equals(rowObject.get(i).toString()) ) {
                             rowStr += rowObject.toString();
@@ -102,10 +108,16 @@ public class Selection implements IOperator {
                     } catch (IOException e) {
                             e.printStackTrace();
                       }
+                    
              }
                     
            // if node.getWhereCondition(); == "<"
               if(node.getWhereCondition().equals("<")){
+          // Sanity check, checks for same data type or return null         
+            if (rowObject.get(pos) != node.getConstant()){
+                return null
+                }
+                  
                     for (Integer i: pos){
                         if  ( constant < (rowObject.get(i).toString()) ) {
                         rowStr += rowObject.toString();
@@ -118,10 +130,16 @@ public class Selection implements IOperator {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                
             }
                     
          // if node.getWhereCondition(); == ">"
             if(node.getWhereCondition().equals(">")){
+         // Sanity check, checks for same data type or return null        
+             if (rowObject.get(pos) != node.getConstant()){
+                return null
+                }
+            
                     for (Integer i: pos){
                         if  ( constant > (rowObject.get(i).toString()) ) {
                         rowStr += rowObject.toString();
@@ -134,6 +152,7 @@ public class Selection implements IOperator {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            
           }
         
          // END SELECTION func
@@ -172,8 +191,6 @@ public class Selection implements IOperator {
         }
         return null;
     }
-
-
 
     public static void writeschema(String dirStr, String tableName, String line) throws FileNotFoundException, IOException {
         File dir = new File("data/myDB/"+dirStr);
