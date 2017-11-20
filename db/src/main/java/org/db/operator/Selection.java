@@ -5,10 +5,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
-
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +15,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.db.core.DataBase;
 import org.db.core.Node;
 import org.db.scan.SeqScan;
 
@@ -47,7 +46,7 @@ public class Selection implements IOperator {
         if(node.getOperationName().equals("Selection")){
             int limit = 10;
             int blockCount = 1;
-            String tableName = node.getTableInput().get(0);
+            String tableName = String.valueOf(node.getTableInput().get(0));
             String TableNameOutput = tableName+"_WHERE";
             BufferedWriter blockOutput = createOutputFile(TableNameOutput,tableName, blockCount);
 
@@ -87,10 +86,10 @@ public class Selection implements IOperator {
                 
                     String rowStr = "";
                     // TODO : definir en NODO.java lista de condiciones
-                    String whereCondition = ;
+                    String whereCondition = "";
                     
                     for (Integer i: pos){
-                        if  ( whereCondition.equals(rowObject.get(i).toString();) ) {
+                        if  ( whereCondition.equals(rowObject.get(i).toString()) ) {
                         rowStr += rowObject.toString();
                         }
                     }
@@ -112,12 +111,9 @@ public class Selection implements IOperator {
             }
             close(blockOutput);
 
-            // ELIMINACION DE REPETIDOS
-            List<String> tablasalida = new ArrayList<String>();
-            tablasalida.add(TableNameOutput);
-
+            // ELIMINACION DE REPETIDOS 
             Node node1 = new Node();
-            node1.setTableInput(tablasalida);
+            node1.addTableInput(TableNameOutput);
 
             node1.setOperationName("RemoveRepeated");
 
@@ -224,6 +220,3 @@ public class Selection implements IOperator {
 
 
 }
-#
-# EOF!
-#
