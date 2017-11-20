@@ -6,10 +6,13 @@ import java.util.List;
 public class Node {
 
 	private String operationName;
+	private String tableNameOutput;
+	private String whereCondition;
+	private String scanMethod = "seq";
+	
 	private List<Object> tableInput;
 	private List<String> parameters;
-	private String tableNameOutput;
-	private String scanMethod = "seq";
+
 	
 	public Node(String operationName, List<Object> tableInput, List<String> parameters, 
 			String tableNameOutput, String scanMethod) {
@@ -58,6 +61,15 @@ public class Node {
 	public void setScanMethod(String scanMethod) {
 		this.scanMethod = scanMethod;
 	}
+	
+	public String getWhereCondition() {
+		return whereCondition;
+	}
+	public void setWhereCondition(String whereCondition) {
+		this.whereCondition = whereCondition;
+	}
 
 	
 }
+
+//EOF!
