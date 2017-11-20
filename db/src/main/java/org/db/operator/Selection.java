@@ -88,23 +88,24 @@ public class Selection implements IOperator {
                     String rowStr = "";
                     String whereCondition = node.getWhereCondition();
                     String constant = node.getConstant();
-                   // if node.getWhereCondition(); == "="
-                    if(node.getWhereCondition().equals("=")){
-                    for (Integer i: pos){
-                        if  ( constant.equals(rowObject.get(i).toString()) ) {
-                        rowStr += rowObject.toString();
+          // if node.getWhereCondition(); == "="
+            if(node.getWhereCondition().equals("=")){
+                       for (Integer i: pos){
+                            if  ( constant.equals(rowObject.get(i).toString()) ) {
+                            rowStr += rowObject.toString();
+                            }
                         }
-                    }
                     
-                    blockOutput.write(rowStr);
-                    blockOutput.newLine();
+                        blockOutput.write(rowStr);
+                        blockOutput.newLine();
                     
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                    } catch (IOException e) {
+                            e.printStackTrace();
+                      }
+             }
                     
-                 // if node.getWhereCondition(); == "<"
-                    if(node.getWhereCondition().equals("<")){
+           // if node.getWhereCondition(); == "<"
+              if(node.getWhereCondition().equals("<")){
                     for (Integer i: pos){
                         if  ( constant < (rowObject.get(i).toString()) ) {
                         rowStr += rowObject.toString();
@@ -117,9 +118,10 @@ public class Selection implements IOperator {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            }
                     
-                // if node.getWhereCondition(); == ">"
-                    if(node.getWhereCondition().equals(">")){
+         // if node.getWhereCondition(); == ">"
+            if(node.getWhereCondition().equals(">")){
                     for (Integer i: pos){
                         if  ( constant > (rowObject.get(i).toString()) ) {
                         rowStr += rowObject.toString();
@@ -132,7 +134,9 @@ public class Selection implements IOperator {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                    // END SELECTION func
+          }
+        
+         // END SELECTION func
                 
                 items++;
                 if(items % limit == 0 && scan.hasNext()){
