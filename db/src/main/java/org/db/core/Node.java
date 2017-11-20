@@ -72,6 +72,8 @@ public class Node {
 		return constant;
 	}
 	
+	// setWhereCondition set the condition and the constat for the boolean comparison
+	// The data type of TABLE.COLUMN must be preserved at the constat, or it will return error.
 	public void setWhereCondition(String whereCondition, String constant) {
 		this.constant = constant;
 		this.whereCondition = whereCondition;
