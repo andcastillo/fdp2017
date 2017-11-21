@@ -1,5 +1,7 @@
 package org.db.util;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 
 /******************************************************************************
 
@@ -55,6 +57,10 @@ public class BTree<Key extends Comparable<Key>, Value>  {
     private int height;      // height of the B-tree
     private int n;           // number of key-value pairs in the B-tree
     private Node currentNode;
+    private int currentChildIndex;
+    private int iteration;
+    private LinkedList<Node> nodesToVisit;
+
 
     // helper B-tree node data type
     private static final class Node {
@@ -85,7 +91,7 @@ public class BTree<Key extends Comparable<Key>, Value>  {
      */
     public BTree() {
         root = new Node(0);
-        currentNode = root;
+        iteration = 0;
     }
 
     /**
@@ -247,6 +253,45 @@ public class BTree<Key extends Comparable<Key>, Value>  {
 
     private boolean eq(Comparable k1, Comparable k2) {
         return k1.compareTo(k2) == 0;
+    }
+
+    private void initIteratorCounters() {
+        nodesToVisit = new LinkedList<>();
+        fillNodesToVisit(root, height);
+        currentNode = nodesToVisit.poll();
+    }
+
+    private void fillNodesToVisit (Node node, int height) {
+        Entry[] children = node.children;
+
+        if (height == 0) {
+            nodesToVisit.add(node);
+        }
+        else {
+            for (int j = 0; j < node.m; j++) {
+                fillNodesToVisit(children[j].next, height-1);
+            }
+        }
+    }
+
+    public Boolean hasNext() {
+        return iteration + 1 < size();
+    }
+
+    public Object next() {
+        if (iteration == 0) {
+            initIteratorCounters();
+        }
+        iteration++;
+        if (currentChildIndex + 1 >= currentNode.m) {
+            currentNode = nodesToVisit.poll();
+            currentChildIndex = -1;
+        }
+        return currentNode.children[++currentChildIndex].val;
+    }
+
+    public void restartScan() {
+        iteration = 0;
     }
 }
 

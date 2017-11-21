@@ -12,7 +12,7 @@ import com.google.common.collect.HashMultimap;
 
 public class Indexer {
     public static Hashtable<String, Hashtable<String, HashMultimap<String, String>>> hashIndexes = new Hashtable<String, Hashtable<String, HashMultimap<String, String>>>();
-    public static Hashtable<String, Hashtable<String, BTree<String, ArrayList<String>>>> btreeIndexes = new Hashtable<String, Hashtable<String, BTree<String, ArrayList<String>>>>();
+    public static Hashtable<String, Hashtable<String, BTree<String, String>>> btreeIndexes = new Hashtable<String, Hashtable<String, BTree<String, String>>>();
     private static final String DEFAULT_SEPARATOR = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
     private Schema dataSchema; 		//Contiene la informacion del esquema a escanea
     private int countBlocks = 1;	//Contador de bloques
@@ -49,7 +49,7 @@ public class Indexer {
     }
 
     private void addEntriesForTableInIndexStructures(String tableName) {
-        btreeIndexes.put(tableName, new Hashtable<String, BTree<String, ArrayList<String>>>());
+        btreeIndexes.put(tableName, new Hashtable<String, BTree<String, String>>());
         hashIndexes.put(tableName, new Hashtable<String, HashMultimap<String, String>>());
     }
 
@@ -79,7 +79,7 @@ public class Indexer {
 
     private void addIndex(String tableName, Attribute attribute) {
         HashMultimap<String, String> hashMultimap = HashMultimap.create();
-        BTree <String, ArrayList<String>> btree = new BTree<String, ArrayList<String>>();
+        BTree <String, String> btree = new BTree<String, String>();
         countBlocks = 1;
         inputStream = nextBlock(tableName);
         do {
@@ -92,12 +92,7 @@ public class Indexer {
                 if (attribute.getScan().equals("hash")) {
                     hashMultimap.put(key, blockLine);
                 } else {
-                    if (btree.get(key) == null) {
-                        ArrayList<String> directions = new ArrayList<String>();
-                        btree.put(key, directions);
-
-                    }
-                    btree.get(key).add(blockLine);
+                    btree.put(key, blockLine);
                 }
                 countRows++;
             }

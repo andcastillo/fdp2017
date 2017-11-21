@@ -18,10 +18,14 @@ public class IndexScanTest {
         // Btree test
         System.out.println("\n------- BTree indexing test (table: B) -------");
         indexer.indexTable("B");
+        IndexScan bIndexScan = new IndexScan("B", "A", indexer);
+        while (bIndexScan.hasNext()) {
+            System.out.println(bIndexScan.next());
+        };
 
-        System.out.println("\n------- Indexing when column is not indexed test (table: B, column:x) -------");
+        System.out.println("\n------- Indexing when column is not indexed test (table: B, indexColumn:x 3rd) -------");
         // Test when column is not indexed
-        IndexScan bIndexScan = new IndexScan("B", "x", indexer);
+        bIndexScan = new IndexScan("B", "x", indexer);
         while (bIndexScan.hasNext()) {
             System.out.println(bIndexScan.next());
         };

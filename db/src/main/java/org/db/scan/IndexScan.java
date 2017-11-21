@@ -32,7 +32,7 @@ public class IndexScan implements Iterator<List<Object>>{
 		if (indexMethod.equals("hash")) {
 			blockLines = Indexer.hashIndexes.get(tableName).get(columnName).values().iterator();
 		} else {
-			// btree iterator
+			Indexer.btreeIndexes.get(tableName).get(columnName).restartScan();
 		}
 		loadSchema();
 	}
@@ -41,20 +41,27 @@ public class IndexScan implements Iterator<List<Object>>{
 	//De lo contrario se carga el siguiente bloque y se inicia nuevamente el contador de registros
 	@Override
 	public boolean hasNext() {
-		return this.blockLines.hasNext();
+		if (this.indexMethod.equals("hash")) {
+			return this.blockLines.hasNext();
+		} else {
+			return Indexer.btreeIndexes.get(tableName).get(columnName).hasNext();
+		}
 	}
 
 	@Override
 	public List<Object> next() {
+		String blockLine = "";
 		if (this.indexMethod.equals("hash")) {
 			//For hash table
 			if (this.blockLines.hasNext()) {
-				return findRowInBlock(this.blockLines.next());
+				blockLine = this.blockLines.next();
 			}
 		} else {
-			//TODO: next for btree
+			if (Indexer.btreeIndexes.get(tableName).get(columnName).hasNext()) {
+				blockLine = (String) Indexer.btreeIndexes.get(tableName).get(columnName).next();
+			}
 		}
-		return null;
+		return findRowInBlock(blockLine);
 	}
 
 
@@ -88,7 +95,6 @@ public class IndexScan implements Iterator<List<Object>>{
 	}
 
 	private void loadSchema (){
-		this.tableName = tableName;
 		File file = new File("data/myDB/"+this.tableName+"/schema.txt"); //Se carga el esquema
 		try {
 			Scanner inputStream = new Scanner(file);
