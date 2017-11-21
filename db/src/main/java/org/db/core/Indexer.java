@@ -102,7 +102,6 @@ public class Indexer {
             hashIndexes.get(tableName).put(attribute.getColumnName(), hashMultimap);
         } else {
             btreeIndexes.get(tableName).put(attribute.getColumnName(), btree);
-            System.out.println(btree.toString());
         }
         this.close();
     }
