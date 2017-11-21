@@ -1,7 +1,6 @@
 package org.db.util;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 
 /******************************************************************************
 
@@ -58,8 +57,9 @@ public class BTree<Key extends Comparable<Key>, Value>  {
     private int n;           // number of key-value pairs in the B-tree
     private Node currentNode;
     private int currentChildIndex;
-    private int iteration;
-    private LinkedList<Node> nodesToVisit;
+    private int numberOfVisitedEntries = 0;
+    private int numberOfVisitedNodes = 0;
+    private ArrayList<Node> nodesToVisit = new ArrayList<>();
 
 
     // helper B-tree node data type
@@ -91,7 +91,7 @@ public class BTree<Key extends Comparable<Key>, Value>  {
      */
     public BTree() {
         root = new Node(0);
-        iteration = 0;
+        numberOfVisitedEntries = 0;
     }
 
     /**
@@ -255,12 +255,6 @@ public class BTree<Key extends Comparable<Key>, Value>  {
         return k1.compareTo(k2) == 0;
     }
 
-    private void initIteratorCounters() {
-        nodesToVisit = new LinkedList<>();
-        fillNodesToVisit(root, height);
-        currentNode = nodesToVisit.poll();
-    }
-
     private void fillNodesToVisit (Node node, int height) {
         Entry[] children = node.children;
 
@@ -275,23 +269,30 @@ public class BTree<Key extends Comparable<Key>, Value>  {
     }
 
     public Boolean hasNext() {
-        return iteration + 1 < size();
+        return numberOfVisitedEntries + 1 <= size();
     }
 
     public Object next() {
-        if (iteration == 0) {
-            initIteratorCounters();
-        }
-        iteration++;
         if (currentChildIndex + 1 >= currentNode.m) {
-            currentNode = nodesToVisit.poll();
+            numberOfVisitedNodes++;
+            if (numberOfVisitedNodes >= nodesToVisit.size()){
+                return null;
+            }
+            currentNode = nodesToVisit.get(numberOfVisitedNodes);
             currentChildIndex = -1;
         }
+        numberOfVisitedEntries++;
         return currentNode.children[++currentChildIndex].val;
     }
 
     public void restartScan() {
-        iteration = 0;
+        numberOfVisitedEntries = 0;
+        numberOfVisitedNodes = 0;
+        currentChildIndex = -1;
+        if (nodesToVisit.size() == 0) {
+            fillNodesToVisit(root, height);
+        }
+        currentNode = nodesToVisit.get(numberOfVisitedNodes);
     }
 }
 
