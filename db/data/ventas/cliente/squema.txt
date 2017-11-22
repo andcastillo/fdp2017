@@ -1,0 +1,2 @@
+client_id-Integer-btree,Nombre-String-btree,Ciudad-String-btree,Activo-Boolean
+

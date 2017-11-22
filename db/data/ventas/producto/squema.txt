@@ -1,0 +1,2 @@
+product_id-Integer-btree,Nombre-String-btree,Color-String,Precio-Double
+
