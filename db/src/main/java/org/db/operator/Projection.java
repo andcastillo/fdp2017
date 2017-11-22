@@ -1,3 +1,5 @@
+package org.db.operator;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -6,16 +8,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.db.core.DataBase;
+import org.db.core.Node;
+import org.db.scan.SeqScan;
+
 
 /**
- *
  * @author WILMER
  */
 public class Projection implements IOperator {
@@ -23,29 +26,29 @@ public class Projection implements IOperator {
     String type;
     Integer items ;
 
-    @Override
+    public Projection() {
+    	
+    }
+
     public void setOperatorName(String name) {
         this.type = name;
     }
 
-    @Override
     public String getOperatorName() {
         return type;
     }
 
-    @Override
     public String apply(Node node) {
-        if(node.getType().equals("Projection")){
-            int limit = 10;
+        if(node.getOperationName().equals("Projection")){ 
             int blockCount = 1;
-            String tableName = node.getTableInput().get(0);
+            String tableName = String.valueOf(node.getTableInput().get(0));
             String TableNameOutput = tableName+"_PR";
             BufferedWriter blockOutput = createOutputFile(TableNameOutput,tableName, blockCount);
 
             List<String> attr = node.getParameters();
             String schema_txt = openschema(tableName);
             String[] parts_schema = schema_txt.split(",");
-            List<String> columns =new ArrayList<>();
+            List<String> columns =new ArrayList<String>();
 
             for (Object object: parts_schema){
                 String[] parts_s = String.valueOf(object).split("-");
@@ -55,7 +58,7 @@ public class Projection implements IOperator {
             List<Integer> pos = new ArrayList<Integer>();
             for (Object object: attr){ pos.add(columns.indexOf(object));}
 
-            List<String> SchemaProje =new ArrayList<>();
+            List<String> SchemaProje =new ArrayList<String>();
             for (Integer i: pos){ SchemaProje.add(parts_schema[i]);}
 
             String lineschema = "";
@@ -84,7 +87,7 @@ public class Projection implements IOperator {
                     e.printStackTrace();
                 }
                 items++;
-                if(items % limit == 0 && scan.hasNext()){
+                if(items % DataBase.LIMIT == 0 && scan.hasNext()){
                     blockCount++;
                     close(blockOutput);
                     blockOutput = createOutputFile(TableNameOutput, tableName, blockCount);
@@ -93,38 +96,22 @@ public class Projection implements IOperator {
             close(blockOutput);
 
             // ELIMINACION DE REPETIDOS
-            List<String> tablasalida = new ArrayList<>();
-            tablasalida.add(TableNameOutput);
-
             Node node1 = new Node();
-            node1.setTableInput(tablasalida);
-
-            node1.setType("RemoveRepeated");
-
+            node1.addTableInput(TableNameOutput);
+            node1.setOperationName("RemoveRepeated");
             IOperator op1 = new RemoveRepeated();
             String table = op1.apply(node1);
-
+            	// ELIMINACION DE ARCHIVOS TEMP PROJECTION
+            	DataBase.getInstance().removeTempFile(TableNameOutput);
+            	// FIN ELIMINACION DE ARCHIVOS TEMP PROJECTION
+            	
             // FIN ELIMINACION DE REPETIDOS
-
-            // ELIMINACION DE ARCHIVOS TEMP PROJECTION
-            File file = new File("data/myDB/"+TableNameOutput);
-            try {
-                delete(file);
-            } catch (IOException ex) {
-                Logger.getLogger(Projection.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            // FIN ELIMINACION DE ARCHIVOS TEMP PROJECTION
 
             node.setTableNameOutput(table);
             return table;
-
-
         }
         return null;
-
     }
-
-
 
     public static void writeschema(String dirStr, String tableName, String line) throws FileNotFoundException, IOException {
         File dir = new File("data/myDB/"+dirStr);
@@ -138,7 +125,6 @@ public class Projection implements IOperator {
         bw.newLine();
         bw.close();
     }
-
 
     public BufferedWriter createOutputFile(String dirStr, String tableName, int block){
         File dir = new File("data/myDB/"+dirStr);
@@ -182,25 +168,4 @@ public class Projection implements IOperator {
         return dataSchema;
 
     }
-
-
-    private static void delete(File file) throws IOException {
-
-        for (File childFile : file.listFiles()) {
-
-            if (childFile.isDirectory()) {
-                delete(childFile);
-            } else {
-                if (!childFile.delete()) {
-                    throw new IOException();
-                }
-            }
-        }
-
-        if (!file.delete()) {
-            throw new IOException();
-        }
-    }
-
-
 }
