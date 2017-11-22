@@ -7,7 +7,6 @@ import java.util.Scanner;
 import java.util.Hashtable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.TreeMultimap;
-import com.google.common.collect.Multimap;
 
 public class Indexer {
     public static Hashtable<String, Hashtable<String, HashMultimap<String, String>>> hashIndexes = new Hashtable<>();

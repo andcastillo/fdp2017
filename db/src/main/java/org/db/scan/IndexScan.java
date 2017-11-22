@@ -14,38 +14,101 @@ public class IndexScan implements Iterator<List<Object>>{
 	private static final String DEFAULT_SEPARATOR = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
 
 	private String tableName; 		//Nombre de la tabla (Directorio) a escanear
-	private String columnName;
+	private Attribute attribute;
 	private Schema dataSchema; 		//Contiene la informacion del esquema a escanear
 	private Indexer indexer;
 	private Iterator<String> blockLines;
 	private String indexMethod;
+	private String filterToApply;
+	private Object constant;
 
 	public IndexScan(String tableName, String columnName, Indexer indexer) {
-		this.tableName = tableName;
-		this.columnName = columnName;
-		this.indexer = indexer;
-		loadSchema();
-		Attribute attribute = new Attribute();
-		for (int i = 0; i < this.dataSchema.getAttribute().length; i++) {
-			if (this.dataSchema.getAttribute()[i].getColumnName().equals(columnName)) {
-				attribute = this.dataSchema.getAttribute()[i];
-				break;
-			}
+		initScanVars(tableName, columnName, indexer);
+		prepareScan();
+	}
+
+	// Possible operators ar =, >, <, >=, <=
+	public IndexScan(String tableName, String columnName, Indexer indexer, String operator, Object constant) {
+		initScanVars(tableName, columnName, indexer);
+		this.constant = constant;
+		if (operator.equals("=")) {
+			prepareScanWithEqualFilter(attribute, constant);
+		} else {
+			this.filterToApply = operator;
+			prepareScan();
 		}
-		if (indexer.columnIsHashIndexed(tableName, columnName)) {
+	}
+
+	public void prepareScan () {
+		if (indexer.columnIsHashIndexed(tableName, attribute.getColumnName())) {
 			indexMethod = "hash";
-		} else if (indexer.columnIsBTreeIndexed(tableName, columnName)) {
+		} else if (indexer.columnIsBTreeIndexed(tableName, attribute.getColumnName())) {
 			indexMethod = "btree";
 		} else {
-			indexMethod = indexer.indexColumn(tableName, columnName);
+			indexMethod = indexer.indexColumn(tableName, attribute.getColumnName());
 		}
 		if (indexMethod.equals("hash")) {
-			blockLines = Indexer.hashIndexes.get(tableName).get(columnName).values().iterator();
+			blockLines = Indexer.hashIndexes.get(tableName).get(attribute.getColumnName()).values().iterator();
 		} else if (attribute.getType().equals("Integer") || attribute.getType().equals("Double")) {
-			blockLines = Indexer.btreeNumberIndexes.get(tableName).get(columnName).values().iterator();
+			blockLines = Indexer.btreeNumberIndexes.get(tableName).get(attribute.getColumnName()).values().iterator();
 		} else {
-			blockLines = Indexer.btreeIndexes.get(tableName).get(columnName).values().iterator();
+			blockLines = Indexer.btreeIndexes.get(tableName).get(attribute.getColumnName()).values().iterator();
 		}
+	}
+
+	public void prepareScanWithEqualFilter(Attribute attribute, Object constant) {
+		if (indexer.columnIsHashIndexed(tableName, attribute.getColumnName())) {
+			indexMethod = "hash";
+		} else if (indexer.columnIsBTreeIndexed(tableName, attribute.getColumnName())) {
+			indexMethod = "btree";
+		} else {
+			indexMethod = indexer.indexColumn(tableName, attribute.getColumnName());
+		}
+		if (indexMethod.equals("hash")) {
+			blockLines = Indexer.hashIndexes.get(tableName).get(attribute.getColumnName()).get((String)constant).iterator();
+		} else if (attribute.getType().equals("Integer") || attribute.getType().equals("Double")) {
+			blockLines = Indexer.btreeNumberIndexes.get(tableName).get(attribute.getColumnName()).get((Number) constant).iterator();
+		} else {
+			blockLines = Indexer.btreeIndexes.get(tableName).get(attribute.getColumnName()).get((String)constant).iterator();
+		}
+	}
+
+	/*
+	public void applyGreaterFilter (Attribute attribute, Object constant) {
+		if (indexer.columnIsHashIndexed(tableName, attribute.getColumnName())) {
+			indexMethod = "hash";
+		} else if (indexer.columnIsBTreeIndexed(tableName, attribute.getColumnName())) {
+			indexMethod = "btree";
+		} else {
+			indexMethod = indexer.indexColumn(tableName, attribute.getColumnName());
+		}
+		if (indexMethod.equals("hash")) {
+			System.out.println("> operation is not sopported for hash indexing");
+			return;
+		} else if (attribute.getType().equals("Integer") || attribute.getType().equals("Double")) {
+			blockLines = Indexer.btreeNumberIndexes.get(tableName).get(attribute.getColumnName()).asMap().tailMap((Number) constant, false).values().iterator();
+		} else {
+			blockLines = Indexer.btreeIndexes.get(tableName).get(attribute.getColumnName()).asMap().tailMap((String) constant, false).values().iterator();
+		}
+	}
+	*/
+
+	public void initScanVars(String tableName, String columnName, Indexer indexer) {
+		this.tableName = tableName;
+		this.indexer = indexer;
+		this.filterToApply = "none";
+		this.constant = "none";
+		loadSchema();
+		attribute = getAttributeFromSchema(columnName);
+	}
+
+	public Attribute getAttributeFromSchema(String columnName) {
+		for (int i = 0; i < this.dataSchema.getAttribute().length; i++) {
+			if (this.dataSchema.getAttribute()[i].getColumnName().equals(columnName)) {
+				return this.dataSchema.getAttribute()[i];
+			}
+		}
+		return null;
 	}
 
 	//Se pregunta si hay siguiente en un bloque
@@ -58,12 +121,68 @@ public class IndexScan implements Iterator<List<Object>>{
 	@Override
 	public List<Object> next() {
 		String blockLine = "";
+		List<Object> tuple = null;
 		if (this.blockLines.hasNext()) {
 			blockLine = this.blockLines.next();
+			tuple = findRowInBlock(blockLine);
+			if (!filterToApply.equals("none")) {
+				if (attribute.getType().equals("Integer")) {
+					Integer number = (Integer) tuple.get(attribute.getIndex());
+					switch (filterToApply) {
+						case ">":
+							if (number <= (Integer) constant) {
+								return next();
+							}
+							break;
+						case "<":
+							if (number >= (Integer) constant) {
+								return next();
+							}
+							break;
+						case "<=":
+							if (number > (Integer) constant) {
+								return next();
+							}
+							break;
+						case ">=":
+							if (number < (Integer) constant) {
+								return next();
+							}
+							break;
+					}
+				} else if (attribute.getType().equals("Double")) {
+					Double number = (Double) tuple.get(attribute.getIndex());
+					switch (filterToApply) {
+						case ">":
+							if (number <= (Double) constant) {
+								return next();
+							}
+							break;
+						case "<":
+							if (number >= (Double) constant) {
+								return next();
+							}
+							break;
+						case "<=":
+							if (number > (Double) constant) {
+								return next();
+							}
+							break;
+						case ">=":
+							if (number < (Double) constant) {
+								return next();
+							}
+							break;
+					}
+				} else {
+					System.out.println(filterToApply + " can only be applied on Integers or Doubles");
+				}
+			} else {
+				return tuple;
+			}
 		}
-		return findRowInBlock(blockLine);
+		return tuple;
 	}
-
 
 	private List<Object> findRowInBlock (String blockLine) {
 		String [] splitBlockLine = blockLine.split(",");
