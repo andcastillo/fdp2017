@@ -14,6 +14,7 @@ public class Attribute {
 		this.columnName = columnName;
 		this.type = type;
 	}
+	public Attribute ()  {}
 	public int getIndex() {
 		return index;
 	}

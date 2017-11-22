@@ -2,17 +2,17 @@ package org.db.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Scanner;
-
-import org.db.util.BTree;
 
 import java.util.Hashtable;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.TreeMultimap;
+import com.google.common.collect.Multimap;
 
 public class Indexer {
-    public static Hashtable<String, Hashtable<String, HashMultimap<String, String>>> hashIndexes = new Hashtable<String, Hashtable<String, HashMultimap<String, String>>>();
-    public static Hashtable<String, Hashtable<String, BTree<String, String>>> btreeIndexes = new Hashtable<String, Hashtable<String, BTree<String, String>>>();
+    public static Hashtable<String, Hashtable<String, HashMultimap<String, String>>> hashIndexes = new Hashtable<>();
+    public static Hashtable<String, Hashtable<String, TreeMultimap<String, String>>> btreeIndexes = new Hashtable<>();
+    public static Hashtable<String, Hashtable<String, TreeMultimap<Number, String>>> btreeNumberIndexes = new Hashtable<>();
     private static final String DEFAULT_SEPARATOR = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
     private Schema dataSchema; 		//Contiene la informacion del esquema a escanea
     private int countBlocks = 1;	//Contador de bloques
@@ -37,7 +37,8 @@ public class Indexer {
     }
 
     public Boolean columnIsBTreeIndexed (String tableName, String columnName) {
-        return btreeIndexes.containsKey(tableName) && btreeIndexes.get(tableName).get(columnName) != null;
+        return (btreeIndexes.containsKey(tableName) && btreeIndexes.get(tableName).containsKey(columnName)) ||
+                (btreeNumberIndexes.containsKey(tableName) && btreeNumberIndexes.get(tableName).containsKey(columnName));
     }
 
     public Boolean columnIsHashIndexed (String tableName, String columnName) {
@@ -45,12 +46,13 @@ public class Indexer {
     }
 
     private Boolean isTableInTableInIndexStructures(String tableName) {
-        return btreeIndexes.containsKey(tableName) || hashIndexes.containsKey(tableName);
+        return btreeIndexes.containsKey(tableName) || hashIndexes.containsKey(tableName) || btreeNumberIndexes.containsKey(tableName);
     }
 
     private void addEntriesForTableInIndexStructures(String tableName) {
-        btreeIndexes.put(tableName, new Hashtable<String, BTree<String, String>>());
-        hashIndexes.put(tableName, new Hashtable<String, HashMultimap<String, String>>());
+        btreeIndexes.put(tableName, new Hashtable<>());
+        btreeNumberIndexes.put(tableName, new Hashtable<>());
+        hashIndexes.put(tableName, new Hashtable<>());
     }
 
     public String indexColumn(String tableName, String attributeName) {
@@ -78,8 +80,8 @@ public class Indexer {
     }
 
     private void addIndex(String tableName, Attribute attribute) {
-        HashMultimap<String, String> hashMultimap = HashMultimap.create();
-        BTree <String, String> btree = new BTree<String, String>();
+        HashMultimap hash = HashMultimap.create();
+        TreeMultimap tree = TreeMultimap.create();
         countBlocks = 1;
         inputStream = nextBlock(tableName);
         do {
@@ -87,21 +89,29 @@ public class Indexer {
             while (countRows < blockSize && inputStream.hasNext()) {
                 String row = inputStream.nextLine();
                 String[] tempRow = row.split(DEFAULT_SEPARATOR);
-                String key = tempRow[attribute.getIndex()];
+                Object key = tempRow[attribute.getIndex()];
+                if (attribute.getType().equals("Integer")) {
+                    key = Integer.parseInt((String) key);
+                } else if (attribute.getType().equals("Double")) {
+                    key = Double.parseDouble((String) key);
+                }
                 String blockLine = (countBlocks - 1) + "," + countRows;
                 if (attribute.getScan().equals("hash")) {
-                    hashMultimap.put(key, blockLine);
+                    hash.put(key, blockLine);
                 } else {
-                    btree.put(key, blockLine);
+                    tree.put(key, blockLine);
                 }
                 countRows++;
             }
             inputStream = nextBlock(tableName);
         } while (inputStream != null);
         if (attribute.getScan().equals("hash")) {
-            hashIndexes.get(tableName).put(attribute.getColumnName(), hashMultimap);
-        } else {
-            btreeIndexes.get(tableName).put(attribute.getColumnName(), btree);
+            hashIndexes.get(tableName).put(attribute.getColumnName(), hash);
+        } else if (attribute.getType().equals("Integer") || attribute.getType().equals("Double")) {
+            btreeNumberIndexes.get(tableName).put(attribute.getColumnName(), tree);
+        }
+        else {
+            btreeIndexes.get(tableName).put(attribute.getColumnName(), tree);
         }
         this.close();
     }
