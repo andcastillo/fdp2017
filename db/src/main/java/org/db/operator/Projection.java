@@ -47,7 +47,7 @@ public class Projection implements IOperator {
 
             List<String> attr = node.getParameters();
             String schema_txt = openschema(tableName);
-            String[] parts_schema = schema_txt.split(",");
+            String[] parts_schema = schema_txt.split(",(?=(?:[^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
             List<String> columns =new ArrayList<String>();
 
             for (Object object: parts_schema){
@@ -56,7 +56,9 @@ public class Projection implements IOperator {
             }
 
             List<Integer> pos = new ArrayList<Integer>();
-            for (Object object: attr){ pos.add(columns.indexOf(object));}
+            for (Object object: attr){
+            	pos.add(columns.indexOf(String.valueOf(object)));
+            	}
 
             List<String> SchemaProje =new ArrayList<String>();
             for (Integer i: pos){ SchemaProje.add(parts_schema[i]);}

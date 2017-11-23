@@ -15,6 +15,7 @@ import org.db.operator.IOperator;
 import org.db.operator.Projection;
 
 import com.google.gson.Gson;
+import com.google.gson.internal.LinkedTreeMap;
 
 
 public class DataBase {
@@ -51,16 +52,23 @@ public class DataBase {
 
 	}
 
-	private Object parserSQL(Node root){ 
-		List<Object> tables = root.getTableInput();
+	private Object parserSQL(Object root){
+		Node Nd = null;
+		if(root.getClass().equals(LinkedTreeMap.class)) {
+			Nd = (new Gson()).fromJson(String.valueOf(root), Node.class); 
+		}else {
+			Nd = (Node)root;
+		}
+		List<Object> tables = Nd.getTableInput();
 		for (int i = 0; i < tables.size(); i++) {
 			Object node = tables.get(i);
-			if(node instanceof Node) {
-				Node tmp = (Node) node;
-				tables.set(i, parserSQL(tmp));
+			if(node.getClass().equals(LinkedTreeMap.class)) {
+				//Node tmp = (Node) node;
+				Object tmp = parserSQL((Object)node);
+				tables.set(i, tmp);
 			}			
 		}
-		return executeSQL(root);//llamado a ejecutar la consula con el arbol generado por el parseador
+		return executeSQL(Nd);//llamado a ejecutar la consula con el arbol generado por el parseador
 	} 
 
 	private String executeSQL(Object executionTree) {

@@ -16,26 +16,58 @@ public class TestMain {
 		System.out.println ("Por favor introduzca una consulta:");
 		String input = "";
 
-
-        Node node = new Node();
+		//Primera pregunta
+/*        Node node = new Node();
         node.setOperationName("Projection");
-        node.addTableInput("A");
-        node.addParameters("c");
-        node.addParameters("id");
+        node.addTableInput("cliente");        
+        node.addParameters("Ciudad");
+        node.addParameters("Activo");
         
-
         Node node1 = new Node();
-        node1.setOperationName("Projection");
-        node1.addTableInput("A");
-        node1.addParameters("id");
-        node1.addParameters("c");
-        node1.addParameters("b");
-        node1.addParameters("x");
+        node1.setOperationName("Selection");
+        node1.addTableInput(node);        
+        node1.addParameters("Activo=true");
+  */      
         
-        node.addTableInput(node1);
+/*
+        Node nodec = new Node();
+        nodec.setOperationName("Join");
+        nodec.addTableInput("cliente");
+        nodec.addTableInput("factura");        
+        nodec.addParameters("client_id");
+        nodec.addParameters("client_id");
         
+        Node nodep = new Node();
+        nodep.setOperationName("Join");
+        nodep.addTableInput(nodec);
+        nodep.addTableInput("factura");        
+        nodep.addParameters("factura_id");
+        nodep.addParameters("factura_id");
+        //client_id-Integer,Nombre-String,Ciudad-String,Activo-Boolean,clientefactura_JO.factura_id-Integer,clientefactura_JO.cliente_id-Integer,clientefactura_JO.product_id-Integer,clientefactura_JO.Nproducts-Integer,factura.client_id-Integer,factura.Nombre-String,factura.Ciudad-String,factura.Activo-Boolean
+        Node nodes = new Node();
+        nodes.setOperationName("Projection");
+        nodes.addTableInput(nodep);        
+        nodes.addParameters("Nombre");//nombre cliente
+        nodes.addParameters("client_id");//nombre cliente
+        nodes.addParameters("clientefactura_JO.Nproducts");
+        nodes.addParameters("clientefactura_JO.factura_id");
+        nodes.addParameters("factura.Nombre");//nombre producto*/
+  
+	      Node nodec = new Node();
+	        nodec.setOperationName("Join");
+	        nodec.addTableInput("clientefactura_JOfactura_JO_PR_RR_WHERE_RR");
+	        nodec.addTableInput("factura");        
+	        nodec.addParameters("client_id");
+	        nodec.addParameters("client_id");
+	  
+/*
+        Node node1 = new Node();
+        node1.setOperationName("Selection");
+        node1.addTableInput(nodes);        
+        node1.addParameters("client_id=3");
+  */      
 		Gson gson = new Gson();
-		String jsonExample =  gson.toJson(node,  Node.class);//Se convierten los nodos a String 
+		String jsonExample =  gson.toJson(nodec,  Node.class);//Se convierten los nodos a String 
 		System.out.println("Json:"+jsonExample);
 		DataBase.initDataBase("myDB");
 		//Los siguientes prints en pantalla muestran como se usa el acceso a la bd
