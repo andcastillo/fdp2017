@@ -59,7 +59,7 @@ public class TestMain {
 	        nodec.addTableInput("factura");        
 	        nodec.addParameters("client_id");
 	        nodec.addParameters("client_id");
-	  
+	 
 /*
         Node node1 = new Node();
         node1.setOperationName("Selection");
