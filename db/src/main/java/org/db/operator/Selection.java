@@ -52,11 +52,11 @@ public class Selection implements IOperator {
             }
             else if(((String)node.getParameters().get(0)).contains(">")) {
                 selectionParameters = ((String)node.getParameters().get(0)).split(">");
-                operation = "=";
+                operation = ">";
             }
             else if(((String)node.getParameters().get(0)).contains("<")) {
                 selectionParameters = ((String)node.getParameters().get(0)).split("<");
-                operation = "=";
+                operation = "<";
             }
 
 
@@ -128,7 +128,7 @@ public class Selection implements IOperator {
                     // if operation; == "<"
                     if (operation.equals("<")) {
                         for (Integer i : pos) {
-                            if (Integer.parseInt(constant) < (Integer) rowObject.get(i)) {
+                            if (Integer.parseInt(String.valueOf(rowObject.get(i))) < Integer.parseInt(constant)) {
                                 for (Object j: rowObject){
                                     rowStr += "," +j.toString();
                                 }
@@ -145,7 +145,7 @@ public class Selection implements IOperator {
                     // if operation; == ">"
                     if (operation.equals(">")) {
                         for (Integer i : pos) {
-                            if (Integer.parseInt(constant) > (Integer) rowObject.get(i)) {
+                            if (Integer.parseInt(String.valueOf(rowObject.get(i))) > Integer.parseInt(constant)) {
                                 for (Object j: rowObject){
                                     rowStr += "," +j.toString();
                                 }
