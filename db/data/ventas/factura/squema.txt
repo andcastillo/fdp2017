@@ -1,0 +1,2 @@
+factura_id-Integer,cliente_id-Integer,product_id-Integer,Nproducts-Integer
+
