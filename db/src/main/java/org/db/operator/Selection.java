@@ -181,12 +181,12 @@ public class Selection implements IOperator {
             // FIN ELIMINACION DE REPETIDOS
 
             // ELIMINACION DE ARCHIVOS TEMP PROJECTION
-            /*File file = new File("data/myDB/" + TableNameOutput);
+            File file = new File("data/myDB/" + TableNameOutput);
             try {
                 delete(file);
             } catch (IOException ex) {
                 Logger.getLogger(Projection.class.getName()).log(Level.SEVERE, null, ex);
-            }*/
+            }
             // FIN ELIMINACION DE ARCHIVOS TEMP PROJECTION
 
             node.setTableNameOutput(table);
@@ -259,13 +259,13 @@ return null;
                 delete(childFile);
             } else {
                 if (!childFile.delete()) {
-                    throw new IOException();
+                   // throw new IOException();
                 }
             }
         }
 
         if (!file.delete()) {
-            throw new IOException();
+            //throw new IOException();
         }
     }
 }

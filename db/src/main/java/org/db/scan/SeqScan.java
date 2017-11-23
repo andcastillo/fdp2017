@@ -41,7 +41,7 @@ public class SeqScan implements Iterator<List<Object>>{
 	//De lo contrario se carga el siguiente bloque y se inicia nuevamente el contador de registros
 	public boolean hasNext() {		
 
-		if(countRows > DataBase.LIMIT || !inputStream.hasNext()){
+		if(countRows > DataBase.LIMIT || (inputStream != null && !inputStream.hasNext())){
 			this.close();
 			inputStream = nextBlock();
 			if(inputStream == null){
